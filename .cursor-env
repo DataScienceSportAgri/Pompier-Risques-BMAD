@@ -1,0 +1,3 @@
+python:
+  conda_env: paris_risques
+  conda_path: C:\Users\xavie\miniconda3\Scripts\conda
