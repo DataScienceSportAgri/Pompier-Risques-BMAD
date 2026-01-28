@@ -2,7 +2,7 @@
 
 **Version:** v4  
 **Date:** 27 Janvier 2026  
-**Statut:** En rédaction
+**Statut:** Validé
 
 ---
 
@@ -102,8 +102,13 @@ Le projet actuel est un prototype de visualisation avec des données statiques. 
 | Change | Date | Version | Description | Author |
 |--------|------|---------|-------------|--------|
 | Initial PRD | 27 Jan 2026 | v4 | Création PRD brownfield enhancement | PM |
-| Peaufinement UI | 27 Jan 2026 | v4 | Réponses session objectifs UI : bloc ML 4×2, layout 2/3 colonnes, bandeau bas, Stop/Reprendre, paramètres verrouillés, prédiction semaine 5+, scripts pré-calc, entraînement après 50 runs. Nouvelles FR21–FR24, mise à jour FR10–FR12, FR18–FR19. Section « Spécifications UI détaillées » ajoutée. | PM |
-| Peaufinement UI (2) | 27 Jan 2026 | v4 | Liste chrono + gris quand passé + emojis (flamme, couteau, voiture, rose verte). Rectangles taille fixe, pastel, 3 totaux, pas de clic détail MVP. Carte 100 microzones, délimitation. Inter, pastel, français. Défaut 365 j, auto-save pickle, run complet enregistré. Prédiction 1 run + reset. Graphiques détail Phase 2, SHAP MVP. FR25–FR28, mise à jour FR10–FR11, FR18, FR20–FR22. §9–11 Spécifications UI. | PM |
+| Peaufinement UI | 27 Jan 2026 | v4 | Réponses session objectifs UI : bloc ML 3×2, layout 2/3 colonnes, bandeau bas, Stop/Reprendre, paramètres verrouillés, prédiction semaine 5+, scripts pré-calc, entraînement après 50 runs. Nouvelles FR21–FR24, mise à jour FR10–FR12, FR18–FR19. Section « Spécifications UI détaillées » ajoutée. | PM |
+| Peaufinement UI (2) | 27 Jan 2026 | v4 | Liste chrono + gris quand passé + emojis (flamme, couteau, voiture, rose verte). Rectangles taille fixe, pastel, 3 totaux, pas de clic détail MVP. Carte 100 microzones, délimitation. Inter, pastel, français. Défaut 365 j, auto-save pickle, run complet enregistré. Prédiction 1 run ; **modèles conservés**. Graphiques détail Phase 2, SHAP MVP. FR25–FR28, mise à jour FR10–FR11, FR18, FR20–FR22. §9–11 Spécifications UI. | PM |
+| Contraintes techniques | 27 Jan 2026 | v4 | Python 3.12, Conda (paris_risques). Versions fixées, main.py supprimable. Scripts pré-calcul (scripts/), source_data/, structure pickle par run (génération, events, ML, labels). Config YAML, chemins relatifs. Traçabilité JSON par run (détails, patterns). Adjacents en dur, pas de régression linéaire, parallélisation ok, 0,33 s indicatif, multi-OS. Section Recommandations (config, API, 100 microzones, Folium, pytest, coverage). | PM |
+| Structure Epic | 27 Jan 2026 | v4 | Deux epics : **Epic 1 Pré-calculs** (1.1–1.3), **Epic 2 Simulation** (blocs 2.1–2.5). Numérotation par blocs. Rollback : revert + pytest. Préalable : clarifier modèle J+1 dans le doc pour tests explicites. Story 2.2.1 vecteurs : sous-étapes vérifiables. IV Tkinter supprimée. Story 2.4.2 Orchestration (main.py, runnable sans UI). 2.4.3 minimal UI Lancer/Stop. 2.4.6 Phase 2 graphiques détaillés. Arrondissements adjacents en dur (2.3.1). | PM |
+| Détails Epic & Stories | 27 Jan 2026 | v4 | Epic 1 : **script unique** pré-calculs, **même config** que l’app ; casernes/hôpitaux **fichier internet** ; pickles format implémentation ; vecteurs statiques **sans** distances ; prix m² **internet ou généré**. 2.1.1 : Incident vs PositiveEvent, sous-classes (Fin travaux, etc.). **Ordre 2.2** : 2.2.9 Matrices et 2.2.10 Vecteurs statiques **avant** Golden Hour. Patterns 4j/7j lus → génération patterns futurs, 60j (20+20+20) ; congestion (randomness, accidents ↑, feux ↓), chargement trajets `source_data` explicite. Labels **mensuels** (4 sem), >2 ou >3 morts/mois ; **règle alertes 1–500 morts / 800 j agrégés**. Events : positifs **début de journée**, graves **après** vecteurs ; réduction intensités. 50 runs : **1 affiché** + **49 en calcul seul** ; algos RF, Ridge, LogReg, XGBoost ; **SHAP checkbox**. 2.4.1 avant 2.4.2 ; carte **100 microzones** ; **bouton [Sauvegarder]** export ; **état d’urgence** à l’arrêt. Phase 2 graphiques : morts, blessés, incidence, sommes vecteurs. **DoD** pour toutes stories ; **docs formules + architecture** ; pas d’estimation. | PM |
+| Alertes cohérence (final) | 27 Jan 2026 | v4 | **Règle définitive** (par arrondissement, sur **800 jours agrégés**) : **au moins 1 mort**, **moins de 500 morts**. Si 0 mort ou ≥ 500 morts → alerte (message uniquement). Mise à jour NFR5, 2.2.4, 2.5.1, Mitigation. | PM |
+| Finalisation | 27 Jan 2026 | v4 | Features ML : 1 central (18, dernière sem.) + 4 voisins (4×18, dernière sem.) = 90. SHAP ref 2.4.4 ; 2.4.4 entraînement (1+49) vs prédiction (1 seul). NFR5 parenthèse fermée. Pas de régression linéaire (Ridge, LogReg, XGBoost). Liste de rectangles arrondissements ; packaging → **propagation directionnelle**. Pré-calculs : **run_precompute.py** orchestre les scripts. **formules.md** (formules, matrices) ; **modele-j1-et-generation.md** (complexité, randomness, patterns). Change log 3×2, modèles conservés, règle 1–500 / 800 j partout. **Statut → Validé**. | PM |
 
 ---
 
@@ -117,15 +122,15 @@ FR2: Le système doit calculer les proportions alcool/nuit par type d'incident v
 
 FR3: Le système doit implémenter le calcul Golden Hour (temps trajet caserne→microzone→hôpital) avec prise en compte congestion, stress pompiers, et effet sur casualties si > 60 min.
 
-FR4: Le système doit calculer les morts et blessés graves hebdomadaires par arrondissement en utilisant Golden Hour (30% base aléatoire, 60% après Golden Hour pour morts).
+FR4: Le système doit calculer les morts et blessés graves hebdomadaires par arrondissement. **Morts** : 30 % aléatoire, 70 % Golden Hour (la personne peut mourir malgré le respect de la Golden Hour). **Blessés graves** : 60 % aléatoire, 40 % Golden Hour (la gravité peut être inhérente à l’accident, non seulement à la réponse des pompiers).
 
 FR5: Le système doit calculer 18 features hebdomadaires par arrondissement: 6 sommes incidents (moyen+grave et bénin par type), 6 proportions (alcool et nuit par type), 3 morts hebdo, 3 blessés graves hebdo.
 
-FR6: Le système doit générer des labels (score ou classes) mensuels à partir de morts + blessés graves, avec formule: `(morts × 0.5 + blessés_graves) / (habitants_arr / 100000) × 3.25`.
+FR6: Le système doit générer des labels (score ou classes) **mensuels** à partir de morts + blessés graves. **Score** : `morts + 0.5 × blessés_graves` (les morts par arrondissement et par mois sont rares à Paris ; les blessés graves, pondérés par 0.5, enrichissent la prédiction). **Seuils** (données Paris) : 1, 2 ou 3 morts/mois selon la zone, ou 4 à 6 blessés graves ; les 18 features servent à prédire ces labels.
 
-FR7: Le système doit entraîner des modèles ML (2 régression, 2 classification) sur fenêtres glissantes de 4 semaines consécutives (18 features × 4 arrondissements = 90 features par arrondissement central).
+FR7: Le système doit entraîner des modèles ML (2 régression, 2 classification) sur **90 features** par arrondissement central : **1 central** (18 features, **dernière semaine**) + **4 voisins** (chacun 18 features, **dernière semaine**) = 18 + 4×18 = **90 features**.
 
-FR8: Le système doit fournir des SHAP values pour interprétabilité des modèles ML.
+FR8: Le système doit **implémenter** le calcul des SHAP values (code présent en MVP) ; un **bouton (checkbox)** dans l’UI permet de lancer ou non le calcul. Interprétabilité des modèles ML via SHAP.
 
 FR9: Le système doit sauvegarder les modèles avec métadonnées (nom, numéro entraînement, paramètres génération) dans `models/regression/` ou `models/classification/`.
 
@@ -133,7 +138,7 @@ FR10: Le système doit fournir une interface web Streamlit sur **une seule page*
 
 FR11: Le système doit permettre la sélection de paramètres : **haut gauche** (expander) scénario (pessimiste/moyen/optimiste), variabilité locale (faible/moyen/important) ; **bandeau bas gauche** nombre de jours (**défaut 365**). Lancer possible avec **tous paramètres par défaut**. **Tous paramètres verrouillés** pendant la simulation jusqu'à Stop ; **à l'arrêt, paramètres perdus** (reset).
 
-FR12: Le système doit afficher en temps réel **bandeau bas** : Jours simulés/Total (jour par jour, optionnellement %), Run X/50, progression entraînement ML (après 50 runs). Vitesse 1 jour = 0.33s.
+FR12: Le système doit afficher en temps réel **bandeau bas** : Jours simulés/Total (jour par jour, **avec %**), Run X/50, progression entraînement ML (après 50 runs). Vitesse 1 jour = 0.33s.
 
 FR13: Le système doit générer des événements graves modulables (Accident, Incendie, Agression) avec caractéristiques probabilistes (traffic slowdown, cancel sports, increase bad vectors, kill pompier).
 
@@ -147,13 +152,13 @@ FR17: Le système doit appliquer la règle prix m² (division probabilité agres
 
 FR18: Le système doit permettre **Stop** (arrêt du calcul), affichage du **dernier état de la carte**, **bouton [Reprendre]** pour continuer à partir de l'état sauvegardé. **Sauvegarde automatique** en pickle (dossier dédié, ex. « état d'urgence » / safe state) ; **un run mené à son terme** est enregistré.
 
-FR19: Le système doit fournir **haut droite** un bloc ML (tableau logique 4×2) : **ligne 1** — radio « Train a model » | « Use a prediction model », radio Régression | Classification, si Use prediction sélection fichier modèle (`models/classification/` ou `models/regression/`) ; **ligne 2** — si Train : choix 2 algorithmes (ex. Random Forest + autre, Linear regression + autre), saisie nom modèle après entraînement avec **génération automatique** de noms. Déverrouillage automatique des options selon le choix.
+FR19: Le système doit fournir **haut droite** un bloc ML (tableau logique **3×2** : 3 colonnes × 2 lignes) : **ligne 1** — radio « Train a model » | « Use a prediction model », radio Régression | Classification, si Use prediction sélection fichier modèle (`models/classification/` ou `models/regression/`) ; **ligne 2** — si Train : choix 2 algorithmes (ex. Random Forest + autre, **Ridge** + autre pour régression ; **LogReg**, **XGBoost** pour classification ; **pas de régression linéaire**), saisie nom modèle après entraînement avec **génération automatique** de noms. Déverrouillage automatique des options selon le choix.
 
 FR20: Le système doit afficher les codes couleur par type/gravité: Feu (Jaune/Orange/Rouge), Accident (Beige/Marron), Agression (Gris), avec priorité affichage: Grave → Feu > Agression > Accident. **Charte visuelle MVP** : police **Inter**, thème **clair**, couleurs **pastel** (claires, pas trop sombres). **Emojis** : flamme (incendie), couteau (agression), voiture (accident, **taille variable** selon gravité), rose verte (événement positif). **Langue** : **français uniquement**.
 
 FR21: **Graphiques détaillés** (clic sur arrondissement → évolution temporelle) : **Phase 2** uniquement ; pas dans le MVP.
 
-FR22: **Mode prédiction** : **un seul run** ; à la fin, **retour à l'état initial** (Paris sans événements, jour 0, défaut jours ex. 365). À partir de la **semaine 5**, afficher par arrondissement état prédit (n+1) ; **chaque fin de semaine** (après 5e) afficher **+ / −** (régression) ou **match / mismatch** (classification). Pendant une **fraction de seconde**, afficher la **réalité** puis revenir à la prédiction.
+FR22: **Mode prédiction** : **un seul run** ; à la fin, **retour à l’état initial** (Paris sans événements, jour 0, défaut jours ex. 365). **Modèle chargé conservé** (pas de reset) ; on peut relancer un run avec le même modèle. À partir de la **semaine 5**, afficher par arrondissement état prédit (n+1) ; **chaque fin de semaine** (après 5e) **+ / −** (régression) ou **match / mismatch** (classification). Pendant une **fraction de seconde**, afficher la **réalité** puis revenir à la prédiction.
 
 FR23: Le système doit **entraîner** les modèles ML **une fois les 50 runs terminés** (pas d'entraînement incrémental pendant les runs).
 
@@ -165,7 +170,7 @@ FR26: **Rectangles arrondissements (droite)** : **taille fixe** ; couleurs **pas
 
 FR27: **Carte** : **100 microzones** avec **délimitation visible** ; événements positifs (**rose verte**), incidents (emojis flamme, couteau, voiture) sur la carte.
 
-FR28: **SHAP** : **obligatoire en MVP** pour interprétabilité des modèles ML.
+FR28: **SHAP** : **implémenté en MVP** (code de calcul disponible) ; **bouton/checkbox** pour lancer le calcul ou non. Interprétabilité des modèles ML.
 
 ## Non Functional
 
@@ -177,7 +182,7 @@ NFR3: Le système doit supporter au minimum 50 runs de simulation sans dépassem
 
 NFR4: Le système doit sauvegarder les données intermédiaires en pickle pour permettre reprise après interruption.
 
-NFR5: Le système doit valider la cohérence des données: si 0 morts ou < 2 morts sur arrondissement sur 400 jours → alerte, si > 200 morts → alerte.
+NFR5: Le système doit valider la cohérence des données (par arrondissement, sur **800 jours agrégés sur plusieurs runs**) : au moins 1 mort, moins de 500 morts ; si 0 mort ou ≥ 500 morts → **alerte (message uniquement, pas d’action automatique)**.
 
 NFR6: Le système doit utiliser des nombres entiers (ints) ou floats raisonnables pour éviter problèmes de scalabilité.
 
@@ -197,7 +202,7 @@ NFR12: Le système doit être testable avec tests unitaires pour vérifier cohé
 
 CR1: **Compatibilité données géospatiales**: Le système doit continuer à utiliser GeoPandas et les mêmes formats GeoJSON pour les arrondissements parisiens. Les données géographiques existantes doivent rester compatibles.
 
-CR2: **Compatibilité structure fichiers**: La structure de base du projet (main.py comme point d'entrée possible) doit être préservée, même si Streamlit devient l'interface principale.
+CR2: **Point d’entrée** : Un **main.py** existe (orchestration, config, simulation, Streamlit), distinct de l’ancien `main.py` Tkinter. L’ancien peut être **entièrement remplacé** ; pas de préservation de sa structure.
 
 CR3: **Compatibilité bibliothèques Python**: Les bibliothèques existantes (GeoPandas, Pandas, Folium) doivent continuer à fonctionner. Les nouvelles dépendances (Streamlit, scikit-learn, SHAP) ne doivent pas créer de conflits.
 
@@ -241,17 +246,17 @@ L'interface actuelle Tkinter sera **remplacée** par Streamlit (décision figée
 
 _Source: réponses session de peaufinement requirements. À utiliser pour implémentation._
 
-### 1. Bloc ML (haut droite) – tableau 4 colonnes × 2 lignes
+### 1. Bloc ML (haut droite) – tableau 3 colonnes × 2 lignes
 
-Layout sans bordures visibles (grille logique uniquement). Déverrouillage automatique des options selon le choix (Train vs Use prediction).
+Layout sans bordures visibles (grille logique uniquement). Déverrouillage automatique des options selon le choix (Train vs Use prediction). Les **18 features** servent à prédire les **labels** ; calcul des labels → prédiction puis **réalité** (comparaison).
 
 **Ligne 1 (première ligne) :**
-| Colonne 1 | Colonne 2 | Colonne 3 | Colonne 4 |
-|-----------|-----------|-----------|-----------|
-| **Train a model** ou **Use a prediction model** (boutons radio) | **Régression** ou **Classification** (boutons radio) | Si *Use prediction* : sélection du fichier modèle enregistré (`models/classification/` ou `models/regression/`) | (à définir si besoin) |
+| Colonne 1 | Colonne 2 | Colonne 3 |
+|-----------|-----------|-----------|
+| **Train a model** ou **Use a prediction model** (boutons radio) | **Régression** ou **Classification** (boutons radio) | Si *Use prediction* : sélection du fichier modèle enregistré (`models/classification/` ou `models/regression/`) |
 
 **Ligne 2 (seconde ligne) :**
-- Si **Train a model** : noms des **2 algorithmes** sélectionnables (ex. Random Forest + un autre pour classification ; Linear regression + un autre pour régression). Saisie du **nom du modèle** après entraînement, avec **génération automatique** de noms.
+- Si **Train a model** : noms des **2 algorithmes** sélectionnables (ex. Random Forest, **Ridge** pour régression ; **LogReg**, **XGBoost** pour classification ; **pas de régression linéaire**). Saisie du **nom du modèle** après entraînement, avec **génération automatique** de noms.
 - Si **Use a prediction model** : lié à la sélection du modèle (fichier) en ligne 1.
 
 ### 2. Haut gauche – scénario et variabilité
@@ -263,15 +268,15 @@ Layout sans bordures visibles (grille logique uniquement). Déverrouillage autom
 
 - **Gauche:** Liste **événements / incidents** (toujours visible). Voir § 9 (liste) et § 10 (rectangles).
 - **Centre:** Carte Paris avec **100 microzones** (découpage et délimitation visibles sur la carte). Voir § 11 (carte).
-- **Droite:**  
+- **Droite:** **Liste de rectangles** — un rectangle par arrondissement, chaque nom dans un rectangle.  
   - **Mode entraînement:** **2 colonnes** – (1) **rectangles des 20 arrondissements** (taille fixe, couleurs pastel + emojis, 3 totaux : agressions / incendies / accidents, mis à jour en continu) ; (2) même symbologie (couleurs, emojis). Clic sur rectangle → fenêtre détails (évolution temporelle) : **Phase 2** ; MVP = pas de fenêtre détaillée au clic.  
-  - **Mode prédiction:** **3 colonnes** – (1) **Prédictions** ; (2) **État de l'arrondissement** (dernière semaine connue) ; (3) **Prédiction de l'arrondissement** (semaine n+1). Rien affiché avant la semaine 5 ; à partir de la semaine 5, les arrondissements apparaissent avec état prédit. **Un seul run** en mode prédiction ; à la fin, **retour à l’état initial** : Paris sans événements, affichage réinitialisé, jour 0, nombre de jours par défaut (ex. 365).
+  - **Mode prédiction:** **3 colonnes** – (1) **Prédictions** ; (2) **État de l'arrondissement** (dernière semaine connue) ; (3) **Prédiction de l'arrondissement** (semaine n+1). Rien avant la semaine 5 ; à partir de la 5e, état prédit. **Un seul run** ; à la fin, **retour à l’état initial** (Paris sans événements, jour 0, défaut 365 j). **Modèle chargé conservé** (pas de reset).
 
 ### 4. Bandeau bas – une seule ligne
 
 - **Gauche:** Sélection du **nombre de jours** de simulation. **Valeur par défaut : 365.**
 - **Centre / droite:**  
-  - **Jours simulés / Total** (jour par jour), éventuellement **%** à droite.  
+  - **Jours simulés / Total** (jour par jour, **avec %**).  
   - **Run X / 50** (suffisant).  
   - Progression de l'**entraînement ML** (une fois les 50 runs terminés).
 - **Boutons:** [Lancer], [Stop], [Reprendre].
@@ -300,9 +305,9 @@ Layout sans bordures visibles (grille logique uniquement). Déverrouillage autom
 
 ### 8. Mode prédiction, graphiques détaillés, SHAP
 
-- **Mode prédiction:** **Un seul run**. À la fin du run, **retour à l’état initial** : Paris sans événements (tous événements/accidents retirés de l’affichage), **jour 0**, nombre de jours par défaut (ex. 365).
+- **Mode prédiction:** **Un seul run**. À la fin du run, **retour à l’état initial** : Paris sans événements, **jour 0**, nombre de jours par défaut. **Modèle chargé conservé** (pas de reset) ; on peut relancer un run avec le même modèle.
 - **Graphiques détaillés** (clic sur un arrondissement → évolution temporelle) : **Phase 2** uniquement. Souhaitable après SHAP ; pas dans le MVP.
-- **SHAP:** **Obligatoire en MVP** – à inclure dès la première version.
+- **SHAP:** **Implémenté en MVP** (code de calcul) ; **bouton/checkbox** pour lancer le calcul ou non.
 
 ### 9. Liste événements / incidents (colonne gauche) – MVP
 
@@ -332,137 +337,149 @@ Layout sans bordures visibles (grille logique uniquement). Déverrouillage autom
 
 # Technical Constraints and Integration Requirements
 
+_Source: réponses session contraintes techniques + recommandations PM._
+
 ## Existing Technology Stack
 
-**Languages**: Python (version à déterminer, probablement 3.8+)
+**Languages**: Python **3.12** (cible). Environnement **Conda** (voir `.cursor-env` : `paris_risques`).
 
 **Frameworks**: 
-- Tkinter (interface actuelle, à remplacer)
-- GeoPandas (données géospatiales, à conserver)
-- Pandas (manipulation données, à conserver)
-- Folium (cartes interactives, à conserver/integrer dans Streamlit)
+- Tkinter : **supprimable** ; `main.py` actuel était une première étape, pas à conserver.
+- GeoPandas, Pandas, Folium (à conserver). Alternatives carto possibles → *Recommandations*.
 
-**Database**: Aucune base de données actuellement (données en mémoire, fichiers pickle pour sauvegarde)
+**Database**: Aucune. Données en mémoire, sauvegarde pickle.
 
-**Infrastructure**: Application desktop locale (pas de déploiement serveur actuellement)
+**Infrastructure**: Application locale ; **pas de déploiement web** pour le MVP.
 
-**External Dependencies**:
-- `geopandas`: Chargement données arrondissements Paris
-- `pandas`: Manipulation données risques
-- `folium`: Génération cartes HTML
-- `tkinter`: Interface actuelle (standard library)
-
-**Nouvelles dépendances requises:**
-- `streamlit`: Interface web
-- `scikit-learn`: Modèles ML (RandomForest, autres à définir)
-- `shap`: Interprétabilité modèles
-- `numpy`: Calculs numériques (probablement déjà utilisé indirectement)
-- `pickle`: Sauvegarde données intermédiaires (standard library)
+**Dépendances**: `geopandas`, `pandas`, `folium`, `streamlit`, `scikit-learn`, `shap`, `numpy`. **Versions fixées** (pinned) dans `requirements.txt` pour reproductibilité.
 
 ## Integration Approach
 
-**Database Integration Strategy**: Pas de base de données. Données en mémoire avec sauvegarde pickle pour état de simulation. Structure modulaire pour permettre ajout BDD en Phase 2 si nécessaire.
+**Database**: Pas de BDD. Données en mémoire, pickle pour état. Modulaire pour Phase 2 si besoin.
 
-**API Integration Strategy**: Pas d'API actuellement. Streamlit gère l'interface utilisateur directement. Architecture modulaire pour permettre ajout API REST en Phase 2 si nécessaire.
+**API**: Pas d'API pour le MVP. Idées Phase 2 → *Recommandations* (ex. export JSON, jobs longue durée).
 
-**Frontend Integration Strategy**: Remplacement complet Tkinter → Streamlit. Les composants Folium seront intégrés dans Streamlit via `st.components.v1.html()` ou `folium_static()`. Les widgets Tkinter seront remplacés par widgets Streamlit équivalents.
+**Frontend**: Streamlit remplace Tkinter. Carte (Folium ou alternative) intégrée dans Streamlit.
 
-**Testing Integration Strategy**: Tests unitaires Python (pytest recommandé) pour valider:
-- Cohérence données (seuils morts: 0-2 ou >200)
-- Validation patterns (pas de packaging)
-- Calculs Golden Hour
-- Features hebdomadaires
-- Labels
+**Testing**: Tests unitaires (pytest recommandé) pour cohérence données, patterns, Golden Hour, features, labels. CI (GitHub Actions) géré par l'utilisateur.
 
 ## Code Organization and Standards
 
 **File Structure Approach**: 
 ```
 Pompier-Risques-BMAD/
+├── config/                 # Fichiers config (YAML, cf. Configuration)
+├── scripts/                # Pré-calculs (avant runs)
+│   ├── run_precompute.py   # Script unique qui orchestre tous les pré-calculs
+│   ├── precompute_distances.py
+│   └── ...                 # Autres modules (vecteurs statiques, etc.) → pickles dans data/source_data/
 ├── src/
-│   ├── data/          # Génération données, vecteurs
-│   ├── golden_hour/   # Calculs Golden Hour
-│   ├── events/        # Événements modulables
-│   ├── patterns/      # Patterns 7j et 60j
-│   ├── ml/            # Machine Learning
-│   └── ui/            # Interface Streamlit
+│   ├── data/               # Génération données, vecteurs
+│   ├── golden_hour/
+│   ├── events/
+│   ├── patterns/
+│   ├── ml/
+│   └── ui/                 # Streamlit
 ├── data/
-│   ├── intermediate/   # Pickle données intermédiaires
-│   ├── models/        # Modèles ML sauvegardés
-│   └── patterns/      # Fichiers patterns (CSV/JSON/YAML)
-├── tests/             # Tests unitaires
-└── main.py            # Point d'entrée possible (à adapter)
+│   ├── source_data/        # Sortie scripts pré-calcul (vecteurs de base, proportions, distances)
+│   ├── intermediate/       # Données journalières + ML par run (voir structure par run ci‑dessous)
+│   ├── models/             # Modèles ML sauvegardés
+│   └── patterns/           # Fichiers patterns (lus au runtime)
+├── tests/
+└── main.py                 # Coordonne calculs (simulation, UI) ; ne lance pas les pré-calculs
 ```
 
+**Structure par run (un dossier par run, ex. `data/intermediate/run_042/`)** :  
+Plusieurs pickles + JSON de traçabilité, en sous-dossiers :
+- **`generation/`** (données journalières) : `vecteurs_base.pkl`, `vecteurs_proportions.pkl`
+- **`events/`** : un DataFrame par événement + DataFrame incidents (type, caractéristiques, etc.)
+- **`ml/`** : features condensées, features brutes, calculs morts / blessés graves (pickles dédiés)
+- **`labels/`** : pickles des labels
+- **`trace.json`** (ou à la racine du run) : seed, paramètres, patterns utilisés, détails du run
+
 **Naming Conventions**: 
-- Classes: PascalCase (`Vector`, `StateCalculator`, `EventGrave`)
-- Fonctions: snake_case (`calculate_golden_hour`, `generate_daily_vectors`)
-- Fichiers: snake_case (`daily_data.py`, `weekly_features.py`)
-- Constantes: UPPER_SNAKE_CASE (`MAX_STRESS`, `GOLDEN_HOUR_THRESHOLD`)
+- Classes: **PascalCase** ; Fichiers / fonctions: **snake_case** ; Constantes: **UPPER_SNAKE_CASE**
 
 **Coding Standards**: 
-- Docstrings Python (Google style ou NumPy style)
-- Type hints Python 3.8+ (optionnel mais recommandé)
-- Commentaires pour formules mathématiques complexes
-- Gestion d'erreurs avec try/except et messages clairs
+- Docstrings **homogènes** dans tout le projet (choisir un style, ex. Google ou NumPy, et le tenir).
+- Type hints Python 3.12 (recommandé).
+- Commentaires pour formules complexes ; gestion d'erreurs (try/except, messages clairs).
 
-**Documentation Standards**: 
-- README.md avec instructions installation/démarrage
-- Docstrings pour toutes fonctions/classes publiques
-- Commentaires pour algorithmes complexes (modèle Zero-Inflated Poisson, Golden Hour)
-- Documentation architecture dans `docs/architecture.md` (à créer)
+**Documentation**: README (installation, démarrage), docstrings fonctions/classes, `docs/architecture.md` (à créer).
 
 ## Deployment and Operations
 
-**Build Process Integration**: 
-- Pas de build process actuellement (Python script direct)
-- `requirements.txt` à créer pour dépendances
-- Pas de packaging (wheel/setup.py) nécessaire pour MVP
+**Build**: 
+- `requirements.txt` pour l'app ; **pré-calculs** : deps séparées ou incluses selon besoin (ex. `requirements-precompute.txt` ou section dans README).
+- Pas de packaging (wheel/setup.py) pour le MVP.
 
-**Deployment Strategy**: 
-- Application locale Streamlit (`streamlit run src/ui/web_app.py`)
-- Pas de déploiement serveur pour MVP
-- Phase 2: Possible déploiement Streamlit Cloud ou serveur dédié
+**Exécution**: 
+- **Pré-calculs** : **un fichier orchestration** (ex. `scripts/run_precompute.py`) **lance** les scripts de pré-calcul (`precompute_distances.py`, etc.). Lancés **avant** les runs. Sortie dans `data/source_data/`.
+- **App / simulation** : `main.py` **coordonne** tous les calculs (simulation, UI) ; **ne lance pas** les pré-calculs. Point d'entrée Streamlit : `streamlit run src/ui/web_app.py` (ou via `main.py` si encapsulé).
+- **Pas de déploiement web** pour le MVP.
 
-**Monitoring and Logging**: 
-- Logging Python standard pour debug (niveaux INFO, WARNING, ERROR)
-- Pas de monitoring externe pour MVP
-- Sauvegarde état simulation pour reprise après erreur
+**Logging**: Logging Python standard (INFO, WARNING, ERROR). Sauvegarde état pour reprise.
 
-**Configuration Management**: 
-- Fichier de configuration YAML/JSON pour paramètres (scénarios, variabilité, etc.)
-- Variables d'environnement optionnelles pour chemins fichiers
-- Pas de secrets management nécessaire pour MVP (données générées)
+**Configuration**: 
+- **Format** : **YAML** (recommandé). **Un seul fichier** (ou jeu de fichiers) partagé entre **pré-calculs** et **application**.
+- **Emplacement** : `config/` à la racine. Chemins **relatifs à la racine** du projet.
+- Pas de secrets pour le MVP.
+
+**Traçabilité des runs** : 
+- **Un fichier JSON par run** (ex. `data/intermediate/run_XXX/trace.json`) : seed, paramètres (scénario, variabilité, durée, etc.), **tous les détails utiles**. **Patterns** lus / utilisés pour la génération **inclus** dans ce JSON.
 
 ## Risk Assessment and Mitigation
 
+**Décisions techniques figées** :
+- **Arrondissements adjacents** : **définis en dur** dans le code (pas de fichier externe).
+- **Algorithmes ML** : **pas de régression linéaire** ; ouverture sur le reste (Random Forest, etc.).
+- **50 runs** : **parallélisation autorisée** si réalisable (ex. multiprocessing).
+- **0,33 s / jour** : **cible indicative** ; en cas de bug ou charge, dépassement acceptable.
+- **OS** : **compatibilité multi-OS** (Windows, Linux, macOS) visée.
+
 **Technical Risks**: 
-- **Complexité modèle mathématique**: Le modèle Zero-Inflated Poisson avec régimes cachés est complexe. Risque d'erreurs d'implémentation.
-  - *Mitigation*: Implémentation étape par étape selon ordre défini (7 étapes), tests unitaires pour chaque composant, validation avec données de test connues.
-
-- **Performance génération données**: Génération jour-à-jour avec calculs complexes (Golden Hour, patterns) peut être lent.
-  - *Mitigation*: Optimisation calculs (pré-calcul distances, cache), profiling avec cProfile, parallélisation si nécessaire (calculs vecteurs vs proportions).
-
-- **Compatibilité Streamlit + Folium**: Intégration cartes Folium dans Streamlit peut avoir limitations.
-  - *Mitigation*: Tests d'intégration dès le début, alternatives (plotly, leaflet) si nécessaire.
+- Complexité modèle Zero-Inflated Poisson → implémentation par étapes, tests unitaires, validation sur données connues.
+- Performance génération → pré-calcul, cache, parallélisation si utile.
+- Streamlit + carte (Folium ou alternative) → tests d'intégration précoces ; cf. *Recommandations*.
 
 **Integration Risks**: 
-- **Remplacement Tkinter → Streamlit**: Perte de fonctionnalités existantes si migration incomplète.
-  - *Mitigation*: Liste exhaustive fonctionnalités Tkinter actuelles, migration progressive, tests de régression.
+- Dépendances (scikit-learn, SHAP, etc.) → Conda, `requirements.txt` avec versions fixées, env dédié.
 
-- **Dépendances nouvelles**: Ajout scikit-learn, SHAP peut créer conflits avec versions existantes.
-  - *Mitigation*: Environnement virtuel Python, `requirements.txt` avec versions spécifiques, tests installation propre.
+**Mitigation**: Tests unitaires composants critiques, validation seuils (≥1 et <500 morts / 800 j **agrégés** par arrondissement), structure modulaire, doc technique, sauvegarde état fréquente.
 
-**Deployment Risks**: 
-- **Pas de déploiement actuellement**: Risque faible pour MVP (local).
-  - *Mitigation*: Documentation claire installation, README avec troubleshooting.
+---
 
-**Mitigation Strategies**: 
-- Tests unitaires dès le début pour chaque composant critique
-- Validation continue avec seuils définis (morts: 0-2 ou >200)
-- Architecture modulaire pour faciliter debug et maintenance
-- Documentation technique détaillée (formules, algorithmes)
-- Sauvegarde fréquente état simulation pour reprise après erreur
+## Recommandations (config, API, carte, tests)
+
+_Recommandations PM / Architect pour les points laissés ouverts._
+
+**Config (YAML vs JSON)**  
+- **YAML** recommandé : lisible, commentaires, adapté à la config. JSON plus verbeux. Si tout est généré par code, JSON peut suffire.
+
+**API (Phase 2)**  
+- Export des runs (features, labels, métriques) en **JSON** ou **CSV** via endpoint.
+- **Jobs asynchrones** pour pré-calculs / entraînement long (ex. Celery, RQ, ou simple script + file watcher).
+- **Health check** léger si déploiement web (ex. `/health`).
+
+**100 microzones – sources possibles**  
+- **IRIS** (Insee) : découpages statistiques Paris → agrégation pour viser ~100 zones.
+- **OpenStreetMap** : découpage par quartiers / polygones ; scripts (ex. `osmnx`, `geopandas`) pour générer GeoJSON.
+- **Données Ville de Paris** : découpages existants (îlots, secteurs) à filtrer/agréger.
+- **Grille** : découpage géométrique des 20 arrondissements (ex. grid par arrondissement, puis fusion pour ~100).
+
+**Folium vs alternatives**  
+- **Garder Folium** en premier choix : bon support GeoPandas, choroplèthes, popups. Intégration Streamlit via `st.folium_static` ou `st.components.v1.html`.
+- **Alternatives** si blocage : **Plotly Express** `px.choropleth_mapbox` (vectoriel, fluide) ; **pydeck** (WebGL, gros datasets). Tester tôt l’intégration Streamlit + microzones.
+
+**Carte – affichage**  
+- **Microzones** et **arrondissements** affichés ensemble : **couleurs pastel** pour délimiter les arrondissements ; **trait seul** (découpage) pour les microzones, pas de remplissage obligatoire.
+
+**Tests (pytest vs unittest)**  
+- **pytest** recommandé : discovery auto, fixtures, plugins (cov, mutpy), syntaxe simple. **unittest** = stdlib, plus verbeux. Pour ce projet, **pytest** est un meilleur compromis.
+
+**Couverture (« coverage »)**  
+- **Couverture** = **pourcentage du code exécuté** par les tests (lignes ou branches). Ex. 70 % → 70 % des lignes sont couvertes.  
+- Pas d’objectif chiffré imposé pour le MVP ; viser au moins les **chemins critiques** (génération J+1, Golden Hour, features, labels, ML).
 
 ---
 
@@ -470,158 +487,221 @@ Pompier-Risques-BMAD/
 
 ## Epic Approach
 
-**Epic Structure Decision**: Un seul epic principal "Système de Simulation et Prédiction des Risques" car l'enhancement est cohérent et toutes les fonctionnalités sont interdépendantes. L'ordre d'implémentation est critique (7 étapes définies) et doit être respecté pour éviter problèmes de dépendances.
+**Décision**: **Deux epics**  
+- **Epic 1 : Pré-calculs** — Scripts et données fixes (distances, vecteurs statiques, microzones, etc.) produisant les pickles dans `data/source_data/`.  
+- **Epic 2 : Système de Simulation et Prédiction** — Génération J+1, Golden Hour, features, labels, ML, UI. Dépend d’Epic 1.
 
-**Rationale**: 
-- Toutes les fonctionnalités font partie du même système de simulation/prédiction
-- L'ordre d'implémentation est défini et séquentiel (vecteurs → Golden Hour → features → labels → ML → UI)
-- Un seul epic permet meilleure visibilité et coordination
-- Les stories seront organisées selon les 7 étapes + UI + ML
+**Rationale** : Les pré-calculs sont un livrable distinct, reproductible et testable ; le reste du système consomme leurs sorties. Numérotation **par blocs** pour Epic 2 (2.1 Infra, 2.2 Génération, 2.3 ML, 2.4 UI, 2.5 Qualité).
 
----
+**Rollback** : Revert des commits concernés + exécution des tests (pytest). Pas de feature flags imposés.
 
-# Epic 1: Système de Simulation et Prédiction des Risques
+**Definition of Done** (toutes les stories) : AC satisfaites, IV passées, pytest vert sur les parties concernées, pas de TODO/FIXME résiduels sur le scope de la story. Pas d’estimation (j/h ou t-shirt) dans le PRD.
 
-**Epic Goal**: Transformer l'application de visualisation statique en système complet de simulation et prédiction des risques avec génération de données réalistes, modèles ML interprétables, et interface web Streamlit interactive.
+**Documentation technique** : **Architecture** et **formules** produites **au fil des stories** concernées, pas uniquement en 2.5.2. **Tests** : Réalisés **pendant le développement**, en associant à chaque petite phase le petit test qui correspond.
 
-**Integration Requirements**: 
-- Préserver compatibilité données géospatiales GeoPandas/Folium
-- Architecture modulaire permettant remplacement données générées → vraies données BSPP
-- Structure de dossiers claire séparant données, calculs, ML, UI
-- Sauvegarde état simulation pour reprise après interruption
+**Préalable Epic 2** : Clarifier dans un doc (ex. `modele-j1-et-generation.md`) le **modèle J+1** et les **règles de génération** pour **tests explicites**. **Pas bloquant** pour démarrer Epic 2 (ex. 2.1.1) ; utile pour les stories Génération (2.2.x).
 
 ---
 
-## Story 1.1: Infrastructure de Base et Structure de Projet
+# Epic 1 : Pré-calculs
+
+**Epic Goal** : Produire toutes les données fixes et pré-calculées (distances, vecteurs statiques, microzones, limites microzone→arrondissement, etc.) et les stocker dans `data/source_data/` pour alimenter Epic 2.
+
+**Livrables** : Un **script unique** orchestrant tous les pré-calculs ; sorties en pickle (format au choix de l’implémentation) dans `data/source_data/`.
+
+---
+
+## Story 1.1 : Infrastructure et script unique de pré-calcul
 
 As a **développeur**,  
-I want **une structure de dossiers modulaire et des classes de base (Vector, Event)**,  
-so that **l'implémentation des fonctionnalités complexes peut commencer sur des fondations solides**.
+I want **un script unique** qui lance **tous** les pré-calculs, **la même config** que l’app, et les dossiers dédiés,  
+so that **les pré-calculs sont reproductibles en une commande**.
 
 ### Acceptance Criteria
 
-1. Structure de dossiers créée: `src/data/`, `src/golden_hour/`, `src/events/`, `src/patterns/`, `src/ml/`, `src/ui/`, `data/intermediate/`, `data/models/`, `data/patterns/`, `tests/`
-2. Classe `Vector` implémentée avec 3 valeurs (bénin, moyen, grave) et méthodes appropriées
-3. Classes de base `Event`, `Incident`, `PositiveEvent` implémentées avec structure hiérarchique
-4. Fichier `requirements.txt` créé avec toutes dépendances (GeoPandas, Pandas, Folium, Streamlit, scikit-learn, SHAP, numpy)
-5. README.md créé avec instructions installation et démarrage
-6. Tests unitaires de base pour classe `Vector` (création, accès valeurs, opérations)
+1. Dossiers `scripts/`, `data/source_data/`, `config/` créés. **Un seul script** (ex. `scripts/run_precompute.py`) appelle tous les calculs (distances, vecteurs statiques, microzones, etc.).
+2. **Config** : **Un seul fichier** config partagé (ex. `config/*.yaml`) pour pré-calculs et application.
+3. **Lancer une partie seulement** : possibilité documentée (README + script) — **argument CLI** (ex. `--skip-distances` pour n’exécuter que 1.3) et/ou **section config** pour activer/désactiver des blocs.
+4. `requirements.txt` (ou `requirements-precompute.txt`) avec deps ; README : lancement, sorties, usage des arguments/section.
+5. Format des pickles : **laissé au choix de l’implémentation**.
 
 ### Integration Verification
 
-IV1: Vérifier que l'application Tkinter existante (`main.py`) peut toujours être exécutée sans erreur (même si non utilisée après)
-
-IV2: Vérifier que les imports GeoPandas, Pandas, Folium fonctionnent toujours
-
-IV3: Vérifier que la structure de dossiers n'interfère pas avec fichiers existants (brainstorming/, docs/, etc.)
+IV1: `scripts/` et `data/source_data/` n’écrasent pas `src/`, `docs/`, `brainstorming/`.  
+IV2: Imports OK dans l’env Conda. Lancement partiel (argument et/ou section config) documenté et vérifiable.
 
 ---
 
-## Story 1.2: Génération Vecteurs Journaliers (Étape 1)
+## Story 1.2 : Pré-calcul des distances et 100 microzones (caserne ↔ microzone, microzone ↔ hôpital)
+
+As a **système de simulation**,  
+I want **trajets caserne → microzone, microzone → hôpital, et découpage 100 microzones**, pré-calculés et sauvegardés,  
+so that **Golden Hour (Epic 2) et la carte (100 microzones) s’appuient sur des données fixes**.
+
+### Acceptance Criteria
+
+1. Sous-partie du script unique : calcul des distances et microzones traversées (caserne → microzone, microzone → hôpital).
+2. **100 microzones** : découpage produit et sauvegardé (ex. géométries, centroïdes). Source à définir (IRIS, OSM, etc., cf. recommandations techniques).
+3. **Casernes et hôpitaux** : positions à partir d’un **fichier trouvé sur internet** correspondant au mieux à la réalité (casernes pompier Paris, hôpitaux).
+4. Sorties dans `data/source_data/` (pickle ; format choisi par l’implémentation). Limites microzone→arrondissement incluses (pour agrégation Epic 2).
+5. Vérifications : matrices cohérentes (pas de NaN, dimensions attendues).
+
+### Integration Verification
+
+IV1: Fichiers lisibles par un script Python.  
+IV2: Coûts mémoire / temps raisonnables sur machine standard.
+
+---
+
+## Story 1.3 : Pré-calcul vecteurs statiques et prix m²
+
+As a **système de simulation**,  
+I want **vecteurs statiques (3×3 par microzone) et prix m²** pré-calculés,  
+so that **le moteur J+1 et la règle prix m² (Epic 2) s’appuient sur des données fixes**.
+
+### Acceptance Criteria
+
+1. Sous-partie du script unique : vecteurs statiques (3×3 par microzone) à partir des patterns Paris (`data/patterns/` ou défaut).
+2. **Prix m²** : **source trouvée sur internet** ou **génération** à partir de connaissances (ex. par arrondissement / microzone). Intégrée ou produite par script.
+3. Sorties dans `data/source_data/` (pickle ; format au choix).
+4. **Ordre** : Les vecteurs statiques peuvent être calculés **sans** les distances (Story 1.2) ; pas de dépendance obligatoire 1.3 → 1.2.
+5. Vérifications : dimensions et plages cohérentes.
+
+### Integration Verification
+
+IV1: Artefacts chargés sans erreur.  
+IV2: Aucun conflit avec `data/intermediate/` (runs Epic 2).
+
+---
+
+# Epic 2 : Système de Simulation et Prédiction des Risques
+
+**Epic Goal** : Mettre en place la génération J+1, Golden Hour, features, labels, ML et l’interface Streamlit (simulation runnable avec ou sans UI, minimal UI Lancer/Stop).
+
+**Integration Requirements** : Compatibilité GeoPandas/Folium, structure modulaire, sauvegarde état. **Simulation exécutable sans UI** (ex. script ou `main.py`) et **UI minimale (Lancer, Stop)** dès que la boucle de simulation est branchée.
+
+**Blocs** : 2.1 Infra · 2.2 Génération · 2.3 ML · 2.4 UI · 2.5 Qualité. Numérotation des stories par bloc (2.1.1, 2.2.1, …).
+
+---
+
+## Bloc 2.1 — Infra
+
+## Story 2.1.1 : Infrastructure de base et structure de projet
+
+As a **développeur**,  
+I want **une structure de dossiers modulaire et des classes de base (Vector, Event)**,  
+so that **l’implémentation des fonctionnalités complexes peut commencer sur des fondations solides**.
+
+### Acceptance Criteria
+
+1. Structure de dossiers alignée avec les contraintes techniques : `config/`, `scripts/`, `src/data/`, `src/golden_hour/`, `src/events/`, `src/patterns/`, `src/ml/`, `src/ui/`, `data/source_data/`, `data/intermediate/`, `data/models/`, `data/patterns/`, `tests/`.
+2. Classe `Vector` (bénin, moyen, grave). **Events** : `Event` ; **Incidents** = opposés aux événements positifs (accident grave, incendie grave, agression grave) ; **PositiveEvent** avec sous-classes concrètes : Fin travaux, Nouvelle caserne, Amélioration matériel, etc.
+3. `requirements.txt` avec dépendances (GeoPandas, Pandas, Folium, Streamlit, scikit-learn, SHAP, numpy).
+4. README avec installation et démarrage.
+5. Tests unitaires de base pour `Vector`.
+
+### Integration Verification
+
+IV1: Imports GeoPandas, Pandas, Folium fonctionnent.  
+IV2: La structure n’interfère pas avec `brainstorming/`, `docs/`, etc.
+
+---
+
+## Bloc 2.2 — Génération
+
+**Ordre d’implémentation** : 2.2.1 → 2.2.2 → **2.2.9** → **2.2.10** → 2.2.3 → 2.2.4 → 2.2.5 → 2.2.6 → 2.2.7 → 2.2.8. **Matrices** et **vecteurs statiques** avant Golden Hour.
+
+---
+
+## Story 2.2.1 : Génération vecteurs journaliers (Étape 1)
 
 As a **système de simulation**,  
 I want **générer des vecteurs journaliers (3 vecteurs × 3 valeurs) par microzone selon modèle Zero-Inflated Poisson avec régimes cachés**,  
 so that **les données de base pour toutes les autres fonctionnalités sont disponibles**.
 
-### Acceptance Criteria
+### Acceptance Criteria (sous-étapes vérifiables par tests explicites)
 
-1. Implémentation modèle Zero-Inflated Poisson avec 3 régimes cachés (Stable, Détérioration, Crise)
-2. Génération vecteurs journaliers par microzone: 3 vecteurs (agressions, incendies, accidents) × 3 valeurs (bénin, moyen, grave)
-3. Matrices de transition entre régimes implémentées (modifiables selon patterns)
-4. Calcul probabilités zero-inflation selon formules Session 4
-5. Calcul intensités calibrées avec facteurs (statique, long-terme, etc.)
-6. Sauvegarde vecteurs journaliers en pickle dans `data/intermediate/`
-7. Tests unitaires validant cohérence probabilités (somme = 1), valeurs positives, pas de NaN
+1. **Modèle et régimes** : Implémentation Zero-Inflated Poisson avec 3 régimes cachés (Stable, Détérioration, Crise). Tests : présence des 3 régimes, transitions possibles.
+2. **Vecteurs par microzone** : Génération 3 vecteurs (agressions, incendies, accidents) × 3 valeurs (bénin, moyen, grave) par microzone. Tests : dimensions, types.
+3. **Matrices de transition** : Matrices de transition entre régimes implémentées (modifiables selon patterns). Tests : sommes lignes = 1, pas de NaN.
+4. **Zero-inflation** : Calcul probabilités zero-inflation selon formules Session 4. Tests : valeurs dans [0,1], cohérence avec formules doc.
+5. **Intensités calibrées** : Calcul intensités avec facteurs (statique, long-terme, etc.). Tests : positivité, caps éventuels.
+6. **Sauvegarde** : Sauvegarde vecteurs journaliers en pickle (structure par run dans `data/intermediate/`). Tests : chargement, cohérence.
+7. **Cohérence globale** : Tests unitaires validant probabilités (somme = 1), valeurs positives, pas de NaN, boucle jour-à-jour sans fuite mémoire.
 
 ### Integration Verification
 
-IV1: Vérifier que les vecteurs générés sont compatibles avec structure DataFrame existante (GeoPandas)
-
-IV2: Vérifier que la génération jour-à-jour peut être appelée en boucle sans fuite mémoire
-
-IV3: Vérifier que les performances permettent génération en ≤ 0.33s par jour (objectif)
+IV1: Vecteurs compatibles avec structure GeoPandas / DataFrame utilisée en aval.  
+IV2: Génération jour-à-jour en boucle sans fuite mémoire.  
+IV3: Performance ≤ 0.33 s/jour (cible indicative).
 
 ---
 
-## Story 1.3: Vecteurs Alcool/Nuit et Patterns (Étape 2)
+## Story 2.2.2 : Vecteurs alcool/nuit et patterns (Étape 2)
 
 As a **système de simulation**,  
-I want **générer proportions alcool/nuit via Monte-Carlo journalier et détecter patterns 7j/60j**,  
-so that **les features hebdomadaires peuvent inclure ces proportions et les patterns modulent les régimes**.
+I want **proportions alcool/nuit (Monte-Carlo) et patterns 4j/7j/60j** (lecture + génération),  
+so that **les features hebdo incluent ces proportions et les patterns modulent les régimes et matrices**.
 
 ### Acceptance Criteria
 
-1. Génération Monte-Carlo journalière proportions alcool/nuit par type incident (3 types × 2 proportions = 6)
-2. Agrégation hebdomadaire des proportions (moyenne ou autre méthode définie)
-3. Détection pattern court-terme (7 jours): `Ψ_court(t) = Σ_{s=t-6}^{t} Σ_{τ∈T} I_s^(τ, Moyen)` activé si ≥ 4
-4. Calcul variable cachée long-terme (60 jours): `Φ_long(t) = Σ_{ℓ=1}^{60} β_ℓ × Ψ_pondéré(t-ℓ)` avec décroissance hyperbolique
-5. DataFrames mobiles pour patterns 7j et 60j (lecture depuis fichiers `data/patterns/`)
-6. Mise à jour matrices de transition selon patterns activés (×3.5 si pattern court-terme, probabilité Crise si `Φ_long > 15`)
-7. Tests unitaires validant détection patterns, calculs `Ψ_court` et `Φ_long`, modification matrices
+1. Monte-Carlo journalier proportions alcool/nuit par type (3×2 = 6) ; agrégation hebdomadaire.
+2. **Patterns de base** : lecture depuis `data/patterns/` (ex. **4j** ou **7j**). Ces patterns **génèrent** des patterns futurs qui **modifient** les matrices 7j et 60j.
+3. **7j** : `Ψ_court(t)` ; si trop d’incidents d’une certaine gravité (ex. ≥4 moyen) → pattern de probabilité légèrement plus élevée.
+4. **60j** : structure type **20 jours hausse, 20 jours sous la moyenne, 20 jours re-hausse** pour ajouter chaos / variabilité (ML).
+5. Mise à jour matrices de transition selon patterns activés (×3.5 court-terme, Crise si `Φ_long > 15`, etc.).
+6. Tests unitaires : proportions [0,1], patterns, modification matrices.
 
 ### Integration Verification
 
-IV1: Vérifier que les proportions générées sont dans [0,1] et cohérentes
-
-IV2: Vérifier que les patterns modifient bien les régimes (tests avec patterns connus)
-
-IV3: Vérifier que les DataFrames patterns peuvent être lus depuis fichiers (CSV/JSON/YAML)
+IV1: Proportions cohérentes ; patterns modifient les régimes.  
+IV2: Lecture depuis `data/patterns/` (format défini) OK.
 
 ---
 
-## Story 1.4: Golden Hour - Calculs Distances et Stress (Étape 3)
+## Story 2.2.3 : Golden Hour — calculs distances et stress (Étape 3)
 
 As a **système de simulation**,  
-I want **calculer Golden Hour (temps trajet caserne→microzone→hôpital) avec congestion et stress pompiers**,  
-so that **les morts et blessés graves peuvent être calculés avec réalisme**.
+I want **calculer Golden Hour (temps trajet caserne→microzone→hôpital) avec congestion et stress**,  
+so that **morts et blessés graves peuvent être calculés avec réalisme**.
 
 ### Acceptance Criteria
 
-1. Pré-calcul trajets caserne → microzone (distances, microzones traversées) - données fixes
-2. Pré-calcul trajets microzone → hôpital (distances, microzones traversées) - données fixes
-3. Calcul temps trajet réel avec congestion: `temps_trajet_reel = temps_base × ∏(congestion_microzone_traversee)`
-4. Calcul temps trajet avec stress pompiers: `temps_trajet = temps_base × (1 + stress_caserne × 0.1) × ∏(congestion)`
-5. Calcul temps total: `temps_total = temps_trajet + temps_traitement + temps_hopital_retour`
-6. Détection Golden Hour: si `temps_total > 60 min → casualties × 1.3`
-7. Gestion stress pompiers: 30 pompiers/caserne, +0.4 stress par intervention, moyenne par caserne
-8. Tests unitaires validant calculs distances, temps, Golden Hour, stress
+1. **Chargement explicite** des trajets pré-calculés depuis `data/source_data/` (produits par Epic 1, Story 1.2). La story **doit** décrire explicitement ce chargement (pickle).
+2. **Congestion** par microzone : calcul à partir de **randomness**, **accidents** (↑ congestion), **incendies moyen/grave** (zone bloquée → ↓ congestion). Même principes que vecteurs / proportions : **récurrence microzone, voisins, événements**.
+3. `temps_trajet_reel = temps_base × ∏(congestion)` ; `temps_trajet = temps_base × (1 + stress_caserne × 0.1) × ∏(congestion)` ; `temps_total = temps_trajet + temps_traitement + temps_hopital_retour`.
+4. Golden Hour : si `temps_total > 60 min` → `casualties × 1.3`. Stress : 30 pompiers/caserne, +0.4 par intervention.
+5. Tests unitaires : distances, temps, Golden Hour, stress.
 
 ### Integration Verification
 
-IV1: Vérifier que les données fixes (trajets) peuvent être pré-calculées et sauvegardées (pickle ou CSV)
-
-IV2: Vérifier que le calcul Golden Hour est appelé **avant** calcul morts/blessés (ordre critique)
-
-IV3: Vérifier que les performances permettent calcul Golden Hour en temps raisonnable pour toutes microzones
+IV1: Trajets chargés depuis `data/source_data/` ; Golden Hour **avant** morts/blessés (ordre critique).  
+IV2: Performances raisonnables pour toutes microzones.
 
 ---
 
-## Story 1.5: Morts et Blessés Graves Hebdomadaires (Étape 4)
+## Story 2.2.4 : Morts et blessés graves hebdomadaires (Étape 4)
 
 As a **système de simulation**,  
-I want **calculer morts et blessés graves hebdomadaires par arrondissement en utilisant Golden Hour**,  
-so that **les features hebdomadaires incluent ces données critiques**.
+I want **calculer morts et blessés graves hebdomadaires par arrondissement** (Golden Hour, agrégation microzones),  
+so that **les features hebdo incluent ces données critiques**.
 
 ### Acceptance Criteria
 
-1. Calcul morts hebdomadaires par type (accident, incendie, agression) avec formule: 30% base aléatoire + 60% après Golden Hour
-2. Calcul blessés graves hebdomadaires par type avec formule: plus randomité, moins importance durée trajet, plus importance sévérité
-3. Utilisation résultats Golden Hour (Story 1.4) pour modulation casualties
-4. Agrégation microzones → arrondissements pour totaux hebdomadaires
-5. Validation cohérence: si 0 morts ou < 2 morts sur arrondissement sur 400 jours → alerte, si > 200 morts → alerte
-6. Tests unitaires validant formules, agrégation, validation seuils
+1. **Morts** par type (accident, incendie, agression) : **30 % aléatoire, 70 % Golden Hour** (la personne peut mourir malgré le respect de la Golden Hour).
+2. **Blessés graves** par type : **60 % aléatoire, 40 % Golden Hour** (gravité pouvant être inhérente à l’accident, pas seulement à la réponse pompiers). Utilisation Golden Hour (2.2.3).
+3. **Agrégation microzones → arrondissements** (limites dans pré-calculs Epic 1) ; totaux hebdomadaires.
+4. **Alertes** (par arrondissement, sur **800 jours agrégés sur plusieurs runs**) : **au moins 1 mort**, **moins de 500 morts**. Si 0 mort ou ≥ 500 morts → **message d’alerte uniquement** (pas d’action automatique).
+5. Tests unitaires : formules, agrégation, seuils.
 
 ### Integration Verification
 
-IV1: Vérifier que Golden Hour est calculé **avant** cette story (dépendance critique)
-
-IV2: Vérifier que les morts/blessés sont cohérents avec vecteurs journaliers générés (pas de déconnexion)
-
-IV3: Vérifier que l'agrégation microzones → arrondissements est correcte (somme, pas moyenne)
+IV1: Golden Hour **avant** cette story ; morts/blessés cohérents avec vecteurs.  
+IV2: Agrégation correcte (somme, pas moyenne).
 
 ---
 
-## Story 1.6: Features Hebdomadaires - StateCalculator (Étape 5)
+## Story 2.2.5 : Features hebdomadaires — StateCalculator (Étape 5)
 
 As a **système de simulation**,  
 I want **calculer 18 features hebdomadaires par arrondissement via StateCalculator**,  
@@ -629,11 +709,11 @@ so that **les modèles ML peuvent être entraînés sur ces features**.
 
 ### Acceptance Criteria
 
-1. Classe `StateCalculator` implémentée pour agrégation microzones → arrondissements
+1. Classe `StateCalculator` ; agrégation microzones → arrondissements avec **limites issues des pré-calculs** (Epic 1).
 2. Calcul 6 features sommes incidents: (moyen + grave) et bénin par type (3 types × 2 = 6)
-3. Calcul 6 features proportions: alcool et nuit par type (3 types × 2 = 6) - utilise agrégation hebdomadaire Story 1.3
-4. Calcul 3 features morts hebdomadaires: par type (accident, incendie, agression) - utilise Story 1.5
-5. Calcul 3 features blessés graves hebdomadaires: par type - utilise Story 1.5
+3. Calcul 6 features proportions: alcool et nuit par type (3 types × 2 = 6) — utilise agrégation hebdomadaire Story 2.2.2.
+4. Calcul 3 features morts hebdomadaires par type (accident, incendie, agression) — utilise Story 2.2.4.
+5. Calcul 3 features blessés graves hebdomadaires par type — utilise Story 2.2.4.
 6. Total: 18 features par arrondissement par semaine
 7. Sauvegarde features en DataFrame avec colonnes claires (arrondissement, semaine, feature_1, ..., feature_18)
 8. Tests unitaires validant calculs, agrégation, format DataFrame
@@ -648,84 +728,68 @@ IV3: Vérifier que l'agrégation hebdomadaire est cohérente (somme pour sommes,
 
 ---
 
-## Story 1.7: Labels Mensuels - LabelCalculator (Étape 6)
+## Story 2.2.6 : Labels mensuels — LabelCalculator (Étape 6)
 
 As a **système de simulation**,  
-I want **calculer labels (score ou classes) mensuels à partir de morts + blessés graves**,  
-so that **les modèles ML peuvent être entraînés en supervision**.
+I want **calculer labels (score et classes) mensuels** à partir de morts + blessés graves,  
+so that **les modèles ML sont entraînés en supervision**.
 
 ### Acceptance Criteria
 
-1. Classe `LabelCalculator` implémentée pour calcul labels
-2. Calcul score: `(morts × 0.5 + blessés_graves) / (habitants_arr / 100000) × 3.25`
-3. Calcul classes (3): Normal (≤ 3.25), Pre-catastrophique (> 4.2), Catastrophique (> 4.8 × 0.5 blessés graves)
-4. Utilisation SEULEMENT casualties des événements (évite double comptage)
-5. Agrégation mensuelle (4 semaines) pour labels
-6. Sauvegarde labels avec features dans DataFrame final pour ML
-7. Tests unitaires validant formules, classes, agrégation mensuelle
+1. Classe `LabelCalculator`. **Agrégation mensuelle** : **exactement 4 semaines** (pas de mois civils). Données Paris : peu de morts/blessés graves par arrondissement et par mois.
+2. **Score** : `morts + 0.5 × blessés_graves` (par mois). **Seuils** : **1, 2 ou 3 morts/mois** selon la zone, ou **4 à 6 blessés graves** ; les 18 features prédisent ces labels.
+3. **Classes** : Normal / Pre-catastrophique / Catastrophique selon ces seuils (détail dans `modele-j1-et-generation.md` ou implémentation).
+4. **Seulement** casualties des événements (éviter double comptage). Sauvegarde labels + features dans DataFrame ML. **Prédiction** puis **réalité** pour comparaison.
+5. Tests unitaires : formules, classes, agrégation mensuelle.
 
 ### Integration Verification
 
-IV1: Vérifier que les labels sont alignés avec features (même arrondissement, même période)
-
-IV2: Vérifier que le calcul évite double comptage (utilise seulement casualties événements)
-
-IV3: Vérifier que les classes sont bien définies et non ambiguës
+IV1: Labels alignés avec features (même arrondissement, même période).  
+IV2: Pas de double comptage ; classes non ambiguës.
 
 ---
 
-## Story 1.8: Événements Graves Modulables avec Caractéristiques
+## Story 2.2.7 : Événements graves modulables (Accident, Incendie, Agression)
 
 As a **système de simulation**,  
-I want **générer événements graves (Accident, Incendie, Agression) avec caractéristiques probabilistes**,  
-so that **la complexité nécessaire pour éviter que ML comprenne trop facilement est présente**.
+I want **générer événements graves** avec caractéristiques probabilistes,  
+so that **la complexité pour le ML est suffisante** (effets locaux, ricochets, patterns).
 
 ### Acceptance Criteria
 
-1. Classes événements graves implémentées: `AccidentGrave`, `IncendieGrave`, `AgressionGrave` héritant de `EventGrave`
-2. Caractéristiques probabilistes: Traffic slowdown (70% prob, ×2 temps, 4j, radius 2), Cancel sports (30% prob, 2j), Increase bad vectors (50% prob, +30%, 5j, radius 3), Kill pompier (5% prob)
-3. Influence ligne temporelle: Augmente stress long-terme, pattern court-terme, force transitions régimes
-4. Durée d'effet: 3-10 jours (aléatoire)
-5. Propagation spatiale: Part d'une microzone, pattern droite/gauche, gravité diminue avec distance
-6. Tests unitaires validant génération caractéristiques, effets temporels/spatiaux, durée
+1. Classes `AccidentGrave`, `IncendieGrave`, `AgressionGrave` (héritant de `EventGrave`). Caractéristiques : Traffic slowdown, Cancel sports, Increase bad vectors, Kill pompier (probas et durées selon spec).
+2. **Moment de génération** : **juste après** les vecteurs (dans la boucle jour-à-jour). Effets : stress long-terme, pattern court-terme, transitions régimes ; durée 3–10 j ; propagation spatiale (microzone, voisins, gravité décroissante).
+3. **Matrices de génération** : les événements peuvent **modifier** les matrices (effets locaux, par ricochet) ; patterns et saisonnalité les modulent aussi.
+4. Tests unitaires : caractéristiques, effets temporels/spatiaux.
 
 ### Integration Verification
 
-IV1: Vérifier que les événements graves modifient bien les vecteurs journaliers (augmentation)
-
-IV2: Vérifier que les caractéristiques probabilistes sont appliquées correctement (probabilités respectées)
-
-IV3: Vérifier que les effets se propagent spatialement et temporellement comme défini
+IV1: Événements graves modifient les vecteurs (augmentation) ; probabilités respectées.  
+IV2: Propagation spatiale et temporelle conforme.
 
 ---
 
-## Story 1.9: Événements Positifs et Règle Prix m²
+## Story 2.2.8 : Événements positifs et règle prix m²
 
 As a **système de simulation**,  
-I want **générer événements positifs et appliquer règle prix m² pour modulation agressions**,  
-so that **le système reflète la réalité (travaux, nouvelles casernes) et corrélations socio-économiques**.
+I want **générer événements positifs** et **appliquer la règle prix m²**,  
+so that **travaux, casernes, etc. et corrélations socio-économiques** sont reflétés.
 
 ### Acceptance Criteria
 
-1. Événements positifs implémentés: Fin travaux, nouvelle caserne, amélioration matériel
-2. Effets événements positifs: Modification matrices transition en mieux (réduction intensités, amélioration transitions)
-3. Règle prix m²: Division probabilité agression: `prob_agression_modulée = prob_agression_base / facteur_prix_m2`
-4. Règle prix m²: Diminution probabilités régimes (Prix m² élevé → probabilités Détérioration/Crise réduites)
-5. Facteur prix m²: `facteur_prix_m2 = prix_m2_microzone / prix_m2_moyen_paris`
-6. Données prix m² par microzone (statiques, à définir/charger)
-7. Tests unitaires validant effets événements positifs, modulation agressions, diminution régimes
+1. Événements positifs (Fin travaux, Nouvelle caserne, Amélioration matériel) ; **génération en début de journée** (avant vecteurs).
+2. **Effets** : **réduction des intensités** et amélioration des transitions (pas d’« annulation » binaire des négatifs ; modulation).
+3. **Prix m²** : `facteur_prix_m2 = prix_m2_microzone / prix_m2_moyen_paris` ; `prob_agression_modulée = prob_agression_base / facteur_prix_m2` ; diminution des probabilités Détérioration/Crise si prix m² élevé. Données depuis pré-calculs (Epic 1).
+4. Tests unitaires : effets positifs, modulation agressions et régimes.
 
 ### Integration Verification
 
-IV1: Vérifier que les événements positifs annulent bien événements négatifs (si défini)
-
-IV2: Vérifier que la règle prix m² modifie bien probabilités agressions et régimes
-
-IV3: Vérifier que les données prix m² sont chargées correctement (format, valeurs)
+IV1: Événements positifs réduisent bien les intensités ; règle prix m² appliquée.  
+IV2: Données prix m² chargées correctement (depuis `data/source_data/`).
 
 ---
 
-## Story 1.10: Trois Matrices de Modulation (Gravité, Croisée, Voisins)
+## Story 2.2.9 : Trois matrices de modulation (gravité, croisée, voisins)
 
 As a **système de simulation**,  
 I want **appliquer trois matrices de modulation (gravité microzone, types croisés, voisins) dans calcul intensités**,  
@@ -751,7 +815,7 @@ IV3: Vérifier que la normalisation et les caps sont appliqués correctement
 
 ---
 
-## Story 1.11: Vecteurs Statiques et Interface Patterns Paris
+## Story 2.2.10 : Vecteurs statiques et interface patterns Paris
 
 As a **système de simulation**,  
 I want **implémenter vecteurs statiques (3×3 par microzone) comme interface patterns Paris → modèle**,  
@@ -762,39 +826,35 @@ so that **les patterns Paris peuvent influencer régimes ET intensités**.
 1. Vecteurs statiques implémentés: 3 vecteurs (agressions, incendies, accidents) × 3 valeurs (bénin, moyen, grave) par microzone
 2. Influence sur régimes: Vecteurs statiques modifient probabilités régimes (Stable/Détérioration/Crise)
 3. Influence sur intensités: Vecteurs statiques modifient intensités λ_base(τ,g)
-4. Interface patterns Paris → modèle: Lecture depuis fichiers patterns, application aux vecteurs statiques
-5. Données patterns Paris par microzone (statiques, à définir/charger)
-6. Tests unitaires validant influence régimes, influence intensités, lecture patterns
+4. **Vecteurs statiques** : **chargés depuis `data/source_data/`** (pré-calculés Epic 1, Story 1.3). Interface patterns Paris → modèle (lecture `data/patterns/`, application).
+5. Tests unitaires : influence régimes, influence intensités, chargement.
 
 ### Integration Verification
 
-IV1: Vérifier que les vecteurs statiques sont chargés correctement (format, valeurs par microzone)
-
-IV2: Vérifier que l'influence sur régimes et intensités est appliquée correctement
-
-IV3: Vérifier que l'interface patterns Paris fonctionne (lecture fichiers, application)
+IV1: Vecteurs statiques chargés depuis `data/source_data/` ; influence régimes et intensités correcte.  
+IV2: Lecture patterns et application OK.
 
 ---
 
-## Story 1.12: Préparation Données ML - Fenêtres Glissantes
+## Bloc 2.3 — ML
+
+## Story 2.3.1 : Préparation données ML — fenêtres glissantes
 
 As a **système ML**,  
-I want **préparer données ML avec fenêtres glissantes (4 semaines consécutives) et arrondissements adjacents**,  
+I want **préparer données ML avec fenêtres glissantes et arrondissements adjacents** (1 central + 4 voisins, **dernière semaine** chacun → **90 features**),  
 so that **les modèles peuvent être entraînés sur format correct**.
 
 ### Acceptance Criteria
 
-1. Fenêtres glissantes implémentées: 4 semaines consécutives par arrondissement
-2. Arrondissements adjacents: Arrondissement central + 4 autour = 5 × 18 features = 90 features
-3. Tableau statique arrondissements adjacents créé (format à définir: CSV, JSON, dict Python)
-4. DataFrame final pour ML: 90 colonnes (features) + 1 colonne label (score ou classe)
-5. Workflow: 2 parties - Run qui crée tout (features hebdo + labels), puis 5 runs puis 49 runs supplémentaires
-6. Limitation: Seulement 4 semaines précédentes de l'arrondissement (pas toutes semaines, pas tout Paris)
-7. Tests unitaires validant fenêtres glissantes, arrondissements adjacents, format DataFrame
+1. **Features ML** : **1 arrondissement central** (18 features, **dernière semaine**) + **4 voisins** (chacun 18 features, **dernière semaine**) = 18 + 4×18 = **90 features**.
+2. Arrondissements adjacents **définis en dur** dans le code (cf. contraintes techniques).
+3. DataFrame final pour ML : 90 colonnes (features) + 1 colonne label (score ou classe).
+4. **Workflow** : **50 runs** au total. **1 run** (affiché à l’écran) + **49 runs** en calcul seul pour générer les données ML — pas de « 5 runs puis 49 ». Central et voisins : **dernière semaine** pour les features.
+5. Tests unitaires : fenêtres glissantes, adjacents, format DataFrame.
 
 ### Integration Verification
 
-IV1: Vérifier que les fenêtres glissantes sont créées correctement (4 semaines consécutives)
+IV1: Vérifier que les fenêtres glissantes sont créées correctement (central + 4 voisins, dernière semaine chacun → 90 features)
 
 IV2: Vérifier que les arrondissements adjacents sont corrects (géographiquement adjacents)
 
@@ -802,7 +862,7 @@ IV3: Vérifier que le DataFrame final est dans format utilisable pour scikit-lea
 
 ---
 
-## Story 1.13: Entraînement Modèles ML - Régression et Classification
+## Story 2.3.2 : Entraînement modèles ML — régression et classification
 
 As a **système ML**,  
 I want **entraîner 4 modèles ML (2 régression, 2 classification) sur données préparées**,  
@@ -810,8 +870,8 @@ so that **des prédictions peuvent être faites avec interprétabilité**.
 
 ### Acceptance Criteria
 
-1. 2 modèles régression implémentés (algorithmes à définir, RandomForest probable)
-2. 2 modèles classification implémentés (algorithmes à définir)
+1. **2 régression** : **Random Forest**, **Ridge** (ou 2 parmi RF, Ridge, etc. ; pas de régression linéaire simple).
+2. **2 classification** : **Logistic Regression**, **XGBoost** (ou 2 parmi LogReg, XGBoost, etc.).
 3. Entraînement sur DataFrame final (90 features, labels)
 4. Calcul métriques: MAE, RMSE, R² (régression), Accuracy, Precision, Recall, F1 (classification)
 5. Hyperparamètres: Phase 2 (valeurs fixes au début)
@@ -829,7 +889,7 @@ IV3: Vérifier que les modèles sauvegardés peuvent être rechargés et utilis�
 
 ---
 
-## Story 1.14: SHAP Values pour Interprétabilité
+## Story 2.3.3 : SHAP values pour interprétabilité
 
 As a **utilisateur décideur**,  
 I want **voir SHAP values pour comprendre importance des 18 features**,  
@@ -837,12 +897,10 @@ so that **je peux faire confiance aux prédictions et comprendre les facteurs de
 
 ### Acceptance Criteria
 
-1. Calcul SHAP values pour chaque modèle entraîné (régression et classification)
-2. Importance des 18 features affichée (graphiques SHAP, summary plots)
-3. Intégration SHAP dans workflow ML (calcul après entraînement)
-4. Sauvegarde SHAP values avec modèles (optionnel, peut être recalculé)
-5. Visualisation SHAP dans interface Streamlit (Story 1.16)
-6. Tests unitaires validant calcul SHAP, format valeurs, visualisation
+1. **Code SHAP** implémenté en MVP ; calcul pour chaque modèle (régression et classification) ; importance des 18 features (graphiques, summary).
+2. **Bouton/checkbox** dans l’UI pour **lancer ou non** le calcul (peut être long).
+3. Intégration workflow ML ; sauvegarde optionnelle. Visualisation dans Streamlit (Story 2.4.4).
+4. Tests unitaires : calcul SHAP, format, visualisation.
 
 ### Integration Verification
 
@@ -854,7 +912,9 @@ IV3: Vérifier que la visualisation SHAP fonctionne dans Streamlit
 
 ---
 
-## Story 1.15: Interface Streamlit - Layout et Contrôles de Base
+## Bloc 2.4 — UI
+
+## Story 2.4.1 : Interface Streamlit — layout et contrôles de base
 
 As a **utilisateur**,  
 I want **une interface web Streamlit avec layout défini (carte centre, colonnes gauche/droite, bandeaux)**,  
@@ -862,14 +922,12 @@ so that **je peux interagir avec le système de simulation**.
 
 ### Acceptance Criteria
 
-1. Application Streamlit créée dans `src/ui/web_app.py`
-2. Layout 3 colonnes: Liste événements/incidents (gauche), Carte Paris (centre), Liste arrondissements (droite)
-3. Bandeau haut: Sélections (jours, scénario, variabilité, type ML, nombre runs)
-4. Bandeau bas: [Lancer], Jours X/Total, Run 1/50, [Stop]
-5. Widgets Streamlit: selectbox (scénario, variabilité, type ML), slider (jours, runs), button (Lancer, Stop)
-6. Intégration carte Folium dans Streamlit (via `st.components.v1.html()` ou `folium_static()`)
-7. Codes couleur: Feu (Jaune/Orange/Rouge), Accident (Beige/Marron), Agression (Gris)
-8. Tests manuels validant layout, widgets, intégration carte
+1. Application Streamlit dans `src/ui/web_app.py`.
+2. Layout 3 colonnes : liste événements/incidents (gauche), carte Paris (centre), **liste de rectangles** arrondissements (droite — un rectangle par arrondissement, chaque nom dans un rectangle). Bandeaux haut/bas (cf. spécifications UI détaillées).
+3. **Carte** : **affichage immédiat des 100 microzones** (données pré-calculées Epic 1).
+4. Bandeau haut : expander scénario, variabilité ; bloc ML 3×2 (haut droite). Bandeau bas : nombre de jours (défaut 365), Jours X/Total (avec %), Run X/50, [Lancer], [Stop], [Reprendre].
+5. Widgets Streamlit (selectbox, slider, button, radio) ; codes couleur, charte (pastel, Inter, français), emojis (FR20/FR25/FR26).
+6. Tests manuels : layout, widgets, carte.
 
 ### Integration Verification
 
@@ -881,34 +939,50 @@ IV3: Vérifier que les widgets fonctionnent (sélections, boutons)
 
 ---
 
-## Story 1.16: Interface Streamlit - Simulation et Visualisation
+## Story 2.4.2 : Orchestration (main.py, config, simulation sans UI)
 
-As a **utilisateur**,  
-I want **lancer simulation et voir progression en temps réel avec visualisations**,  
-so that **je peux suivre l'évolution des risques et analyser les résultats**.
+As a **développeur**,  
+I want **brancher `main.py`** (config, simulation, Streamlit) **après** la structure Streamlit (2.4.1),  
+so that **la simulation est exécutable avec ou sans UI**.
 
 ### Acceptance Criteria
 
-1. Bouton [Lancer] démarre simulation avec paramètres sélectionnés
-2. Progression affichée: Jours simulés/Total, Run X/50, avec vitesse 1 jour = 0.33s
-3. Carte Paris mise à jour en temps réel: Événements affichés avec codes couleur, couleurs changeantes selon gravité
-4. Colonne gauche: Liste événements/incidents cliquable → détails (popup/modal)
-5. Colonne droite: Rectangles arrondissements avec évolution temporelle, cliquable → graphiques détaillés (popup/modal)
-6. Priorité affichage: Plus grave → Feu > Agression > Accident
-7. Bouton [Stop] interrompt simulation et sauvegarde état
-8. Tests manuels validant simulation, progression, visualisations, interactions
+1. **Ordre** : **2.4.1 avant 2.4.2** — d’abord layout Streamlit, puis branchement de `main.py`.
+2. `main.py` charge la config (`config/`), lance la boucle de simulation, peut lancer Streamlit. Pas de pré-calculs (Epic 1).
+3. **Mode headless** : N jours / N runs sans UI. **Pas d’obligation** de fichiers de sortie supplémentaires (pickles/trace par run suffisent).
+4. Tests : pipeline config → simulation OK sans Streamlit.
 
 ### Integration Verification
 
-IV1: Vérifier que la simulation peut être lancée et s'exécute correctement (pas d'erreurs)
-
-IV2: Vérifier que la progression est mise à jour en temps réel (Streamlit rerun)
-
-IV3: Vérifier que les visualisations sont correctes (carte, graphiques, codes couleur)
+IV1: Headless produit sorties conformes (pickles, trace) si implémenté.  
+IV2: `streamlit run ...` lance l’app sans erreur une fois orchestré.
 
 ---
 
-## Story 1.17: Interface Streamlit - ML et Modèles Sauvegardés
+## Story 2.4.3 : Simulation et visualisation (Lancer, Stop, minimal UI)
+
+As a **utilisateur**,  
+I want **lancer la simulation et voir la progression en temps réel**,  
+so that **je peux suivre l’évolution des risques**.
+
+### Acceptance Criteria
+
+1. **UI minimale** : [Lancer] et [Stop] fonctionnels ; progression (Jours X/Total, Run X/50, 1 jour = 0.33 s).
+2. **1 run affiché** : **un run** est simulé et affiché à l’écran (0.33 s/jour) ; les **49 autres runs** sont faits **en calcul seul** (sans affichage) pour générer les données ML.
+3. [Lancer] démarre ; [Stop] interrompt et sauvegarde l’état (**état d’urgence** / safe state pour inspection : fichiers créés, partie du run).
+4. Carte Paris mise à jour en temps réel ; événements (codes couleur) ; priorité Feu > Agression > Accident.
+5. Colonne gauche : liste événements/incidents (chronologique, gris quand passé, emojis). Colonne droite : rectangles arrondissements (taille fixe, pastel, 3 totaux, emojis).
+6. **Graphiques détaillés** (clic arrondissement → évolution temporelle) : **Phase 2** uniquement ; MVP = pas de fenêtre au clic.
+7. Tests manuels : simulation, progression, Lancer/Stop, visualisations.
+
+### Integration Verification
+
+IV1: La simulation se lance et s’exécute correctement (Lancer/Stop, pas d’erreurs).  
+IV2: Progression mise à jour en temps réel ; visualisations cohérentes (carte, listes, rectangles).
+
+---
+
+## Story 2.4.4 : Interface Streamlit — ML et modèles sauvegardés
 
 As a **utilisateur**,  
 I want **entraîner modèles ML et charger modèles sauvegardés pour prédiction**,  
@@ -916,14 +990,11 @@ so that **je peux utiliser le système pour prédictions réelles**.
 
 ### Acceptance Criteria
 
-1. Ligne supérieure: Checkbox "Train a model" → choix type ML → sélection 2 modèles (sur 4)
-2. Ligne inférieure: Bouton radio "Use a prediction model" → chargement depuis `models/classification/` ou `models/regression/`
-3. Métadonnées modèles affichées: Nom, numéro entraînement, jours, accuracy
-4. Entraînement modèles depuis interface (bouton "Entraîner" après sélection)
-5. Affichage métriques après entraînement (MAE, RMSE, R² ou Accuracy, Precision, Recall, F1)
-6. Affichage SHAP values après entraînement (graphiques)
-7. Utilisation modèle chargé pour prédiction sur nouvelles données
-8. Tests manuels validant entraînement, chargement, prédiction, visualisations
+1. Bloc ML 3×2 (layout 2.4.1) **connecté** aux modules ML : Train a model / Use a prediction model, Régression / Classification, 2 algos (RF, Ridge, LogReg, XGBoost).
+2. **Bouton/checkbox** pour **calcul SHAP** (lancer ou non) ; code SHAP présent en MVP. Métadonnées modèles (nom, n° entraînement, jours, accuracy).
+3. Entraînement depuis interface ; métriques (MAE, RMSE, R² ou Accuracy, Precision, Recall, F1) ; SHAP si coché.
+4. **Entraînement** : **1 run** affiché à l’écran (0.33 s/jour) + **49 runs** en calcul seul pour ML. **Prédiction** : **1 run** affiché uniquement, pas de runs en calcul seul.
+5. Tests manuels : entraînement, chargement, prédiction, visualisations.
 
 ### Integration Verification
 
@@ -935,33 +1006,50 @@ IV3: Vérifier que les prédictions avec modèle chargé fonctionnent (format, v
 
 ---
 
-## Story 1.18: Sauvegarde/Reprise État Simulation et Export
+## Story 2.4.5 : Sauvegarde / reprise état simulation et export
 
 As a **utilisateur**,  
-I want **sauvegarder état simulation et exporter résultats partiels**,  
-so that **je peux interrompre et reprendre, ou analyser résultats hors ligne**.
+I want **sauvegarder l’état et exporter des résultats partiels**,  
+so that **je peux interrompre, reprendre ou analyser hors ligne**.
 
 ### Acceptance Criteria
 
-1. Sauvegarde état simulation: Vecteurs, événements, variables cachées (stress, patterns, régimes)
-2. Format sauvegarde: Pickle dans `data/intermediate/` avec timestamp
-3. Reprise après interruption: Chargement état sauvegardé, reprise simulation depuis point sauvegarde
-4. Export résultats partiels: DataFrame features, DataFrame labels, modèles ML
-5. Export formats: CSV (features/labels), joblib (modèles), HTML (cartes)
-6. Bouton [Stop] sauvegarde automatiquement état avant interruption
-7. Tests unitaires validant sauvegarde, chargement, export, reprise
+1. **Bouton [Stop]** : sauvegarde automatique de l’état (**état d’urgence** / safe state) en milieu de run — vecteurs, événements, variables cachées — pour **inspection** (fichiers créés, partie du run).
+2. **Bouton dédié [Sauvegarder]** pour export des résultats partiels (features, labels, modèles ML). Formats : CSV (features/labels), joblib (modèles), HTML (cartes).
+3. Reprise après interruption : chargement état sauvegardé, reprise depuis point d’arrêt. Pickle dans `data/intermediate/` (ou dossier dédié type `data/safe_state/` pour état d’urgence).
+4. Tests unitaires : sauvegarde, chargement, export, reprise.
 
 ### Integration Verification
 
-IV1: Vérifier que la sauvegarde fonctionne (fichiers créés, format correct)
-
-IV2: Vérifier que la reprise fonctionne (chargement, continuation simulation)
-
-IV3: Vérifier que les exports sont utilisables (CSV lisible, modèles rechargeables)
+IV1: Sauvegarde et reprise fonctionnent (fichiers créés, format correct).  
+IV2: Exports utilisables (CSV, modèles rechargeables).
 
 ---
 
-## Story 1.19: Validation et Tests de Cohérence
+## Story 2.4.6 *(Phase 2)* : Graphiques détaillés par arrondissement
+
+As a **utilisateur**,  
+I want **voir graphiques détaillés (morts, blessés, incidence, vecteurs) au clic sur un arrondissement**,  
+so that **j’analyse finement les risques par zone**.
+
+### Acceptance Criteria
+
+1. Clic sur rectangle arrondissement → **fenêtre** (ou expander) avec graphiques.
+2. **Contenu** : **nombre de morts**, **nombre de blessés**, **incidence** (évolution des incidents), **évolution des sommes de vecteurs** dans l’arrondissement ; **Phase 2** inclut aussi **évolution des 18 features** et **courbes par type** d’incident.
+3. Intégration fluide avec le layout Streamlit (hors carte, selon specs UI).
+
+### Integration Verification
+
+IV1: Ouverture/fermeture sans erreur ; pas de régression Lancer/Stop.  
+IV2: Données correspondent à l’arrondissement sélectionné.
+
+**Scope** : Phase 2 uniquement ; hors MVP.
+
+---
+
+## Bloc 2.5 — Qualité
+
+## Story 2.5.1 : Validation et tests de cohérence
 
 As a **développeur/QA**,  
 I want **valider cohérence données et patterns avec tests automatisés**,  
@@ -969,8 +1057,8 @@ so that **le système génère des données réalistes et cohérentes**.
 
 ### Acceptance Criteria
 
-1. Tests validation cohérence données: Si 0 morts ou < 2 morts sur arrondissement sur 400 jours → alerte, si > 200 morts → alerte
-2. Tests validation patterns: Vérifier qu'il n'y a pas de packaging (regroupement dans une direction)
+1. Tests validation cohérence données (par arrondissement, sur **800 jours agrégés sur plusieurs runs**) : **au moins 1 mort**, **moins de 500 morts**. Si 0 mort ou ≥ 500 morts → **alerte (message uniquement, pas d’action automatique)**.
+2. Tests validation patterns : vérifier qu’il n’y a pas de **propagation directionnelle** indésirable — un effet d’événement peut se propager dans une direction (bas, gauche, droite) et modifier pendant quelques jours les matrices de création de vecteurs (proportions alcool/nuit ou vecteurs des 3 types d’incidents).
 3. Tests unitaires pour chaque composant critique: Vecteurs, Golden Hour, Features, Labels, ML
 4. Tests d'intégration: Workflow complet simulation → features → labels → ML
 5. Suivi graphiques: Nombre de morts, évolution temporelle, validation visuelle
@@ -987,30 +1075,24 @@ IV3: Vérifier que la couverture tests est suffisante (composants critiques test
 
 ---
 
-## Story 1.20: Documentation Technique et Utilisateur
+## Story 2.5.2 : Documentation technique et utilisateur
 
 As a **développeur/utilisateur**,  
-I want **documentation technique complète et guide utilisateur**,  
-so that **le système peut être maintenu et utilisé efficacement**.
+I want **documentation technique et guide utilisateur**,  
+so that **le système est maintenable et utilisable**.
 
 ### Acceptance Criteria
 
-1. README.md mis à jour: Installation, démarrage, structure projet, dépendances
-2. Documentation architecture: `docs/architecture.md` avec structure, composants, flux données
-3. Documentation formules mathématiques: Modèle Zero-Inflated Poisson, Golden Hour, features, labels (dans code ou docs/)
-4. Guide utilisateur: Instructions interface Streamlit, paramètres, interprétation résultats
-5. Docstrings Python: Toutes fonctions/classes publiques avec descriptions, paramètres, retours
-6. Commentaires code: Algorithmes complexes (formules, calculs) expliqués
-7. Documentation patterns: Format fichiers patterns (CSV/JSON/YAML), exemples
-8. Documentation modèles ML: Format sauvegarde, métadonnées, utilisation
+1. **README.md** : installation, démarrage, structure projet, dépendances.
+2. **`docs/architecture.md`** : structure, composants, flux données ; **niveaux d’intégration** — microzone, voisins, inter-type, même type, incidents, proportions, **congestion routière**, **saisonnalité**, **lecture de patterns** générant des patterns futurs, **effets positifs/négatifs** sur les matrices de génération.
+3. **`docs/formules.md`** : **formules mathématiques** et **matrices** (Zero-Inflated Poisson, Golden Hour, features, labels, modulations).
+4. **`docs/modele-j1-et-generation.md`** : **explication d’ensemble** de la complexité — randomness, patterns réels, ce qui est prédictible ; règles de génération pour tests explicites.
+5. Guide utilisateur : interface Streamlit, paramètres, interprétation des résultats. Docstrings et commentaires pour algorithmes complexes. Documentation patterns (format fichiers) et modèles ML (sauvegarde, métadonnées).
 
 ### Integration Verification
 
-IV1: Vérifier que la documentation est complète (tous composants documentés)
-
-IV2: Vérifier que la documentation est à jour (correspond au code)
-
-IV3: Vérifier que la documentation est utilisable (instructions claires, exemples)
+IV1: Documentation complète et à jour.  
+IV2: Instructions claires et exemples utilisables.
 
 ---
 
