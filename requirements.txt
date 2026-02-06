@@ -1,0 +1,29 @@
+# Requirements pour le système de simulation et prédiction (Epic 2)
+# Python 3.12, Conda (paris_risques)
+
+# Configuration
+pyyaml>=6.0
+
+# Géospatial
+geopandas>=0.13.0
+osmnx>=1.6.0  # Pour pré-calculs (casernes/hôpitaux, microzones)
+
+# Données
+pandas>=2.0.0
+numpy>=1.24.0
+
+# Machine Learning
+scikit-learn>=1.3.0
+joblib>=1.3.0
+xgboost>=2.0.0
+SHAP>=0.42.0
+
+# Visualisation
+folium>=0.14.0
+streamlit>=1.28.0
+
+# Validation patterns
+pydantic>=2.0
+
+# Tests
+pytest>=7.4.0

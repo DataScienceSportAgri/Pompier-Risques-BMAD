@@ -1,0 +1,179 @@
+{
+  "pattern_type": "4j",
+  "pattern_name": "weekend_paris",
+  "description": "Pattern week-end pour Paris (vendredi-dimanche) - Exemple",
+  "version": "1.0",
+  "created_at": "2026-01-28T10:30:00Z",
+  "microzones": [
+    {
+      "microzone_id": "mz_001",
+      "patterns": {
+        "agressions": {
+          "benin": {
+            "probabilite_base": 0.10,
+            "facteurs_modulation": {
+              "regime": {
+                "stable": 1.0,
+                "deterioration": 1.2,
+                "crise": 1.5
+              },
+              "saison": {
+                "hiver": 0.8,
+                "printemps": 1.0,
+                "ete": 1.2,
+                "automne": 1.0
+              }
+            },
+            "influence_regimes": {
+              "stable": 0.98,
+              "deterioration": 1.02,
+              "crise": 1.05
+            }
+          },
+          "moyen": {
+            "probabilite_base": 0.08,
+            "facteurs_modulation": {
+              "regime": {
+                "stable": 1.0,
+                "deterioration": 1.3,
+                "crise": 1.6
+              },
+              "saison": {
+                "hiver": 0.8,
+                "printemps": 1.0,
+                "ete": 1.2,
+                "automne": 1.0
+              }
+            },
+            "influence_regimes": {
+              "stable": 0.97,
+              "deterioration": 1.03,
+              "crise": 1.06
+            }
+          },
+          "grave": {
+            "probabilite_base": 0.05,
+            "facteurs_modulation": {
+              "regime": {
+                "stable": 1.0,
+                "deterioration": 1.4,
+                "crise": 1.8
+              },
+              "saison": {
+                "hiver": 0.8,
+                "printemps": 1.0,
+                "ete": 1.2,
+                "automne": 1.0
+              }
+            },
+            "influence_regimes": {
+              "stable": 0.96,
+              "deterioration": 1.04,
+              "crise": 1.08
+            }
+          }
+        },
+        "incendies": {
+          "benin": {
+            "probabilite_base": 0.12,
+            "facteurs_modulation": {
+              "regime": {
+                "stable": 1.0,
+                "deterioration": 1.2,
+                "crise": 1.5
+              },
+              "saison": {
+                "hiver": 1.3,
+                "printemps": 1.0,
+                "ete": 0.9,
+                "automne": 1.0
+              }
+            }
+          },
+          "moyen": {
+            "probabilite_base": 0.06,
+            "facteurs_modulation": {
+              "regime": {
+                "stable": 1.0,
+                "deterioration": 1.3,
+                "crise": 1.6
+              },
+              "saison": {
+                "hiver": 1.3,
+                "printemps": 1.0,
+                "ete": 0.9,
+                "automne": 1.0
+              }
+            }
+          },
+          "grave": {
+            "probabilite_base": 0.03,
+            "facteurs_modulation": {
+              "regime": {
+                "stable": 1.0,
+                "deterioration": 1.4,
+                "crise": 1.8
+              },
+              "saison": {
+                "hiver": 1.3,
+                "printemps": 1.0,
+                "ete": 0.9,
+                "automne": 1.0
+              }
+            }
+          }
+        },
+        "accidents": {
+          "benin": {
+            "probabilite_base": 0.15,
+            "facteurs_modulation": {
+              "regime": {
+                "stable": 1.0,
+                "deterioration": 1.2,
+                "crise": 1.5
+              },
+              "saison": {
+                "hiver": 1.0,
+                "printemps": 1.05,
+                "ete": 1.0,
+                "automne": 1.05
+              }
+            }
+          },
+          "moyen": {
+            "probabilite_base": 0.10,
+            "facteurs_modulation": {
+              "regime": {
+                "stable": 1.0,
+                "deterioration": 1.3,
+                "crise": 1.6
+              },
+              "saison": {
+                "hiver": 1.0,
+                "printemps": 1.05,
+                "ete": 1.0,
+                "automne": 1.05
+              }
+            }
+          },
+          "grave": {
+            "probabilite_base": 0.05,
+            "facteurs_modulation": {
+              "regime": {
+                "stable": 1.0,
+                "deterioration": 1.4,
+                "crise": 1.8
+              },
+              "saison": {
+                "hiver": 1.0,
+                "printemps": 1.05,
+                "ete": 1.0,
+                "automne": 1.05
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}

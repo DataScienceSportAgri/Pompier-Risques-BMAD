@@ -1,0 +1,114 @@
+# Configuration partagée pour pré-calculs et application
+# Version: 1.0
+# Date: 28 Janvier 2026
+
+# Chemins des dossiers
+paths:
+  data_source: "data/source_data"
+  data_patterns: "data/patterns"
+  data_intermediate: "data/intermediate"
+  data_models: "data/models"
+  scripts: "scripts"
+
+# Configuration simulation
+simulation:
+  default_days: 365
+  default_runs: 50
+  speed_per_day_seconds: 0.33
+  seed_default: 42
+
+# Scénarios
+scenarios:
+  pessimiste:
+    facteur_intensite: 1.3
+    proba_crise: 0.15
+    variabilite_locale: 0.5
+  moyen:
+    facteur_intensite: 1.0
+    proba_crise: 0.10
+    variabilite_locale: 0.3
+  optimiste:
+    facteur_intensite: 0.7
+    proba_crise: 0.05
+    variabilite_locale: 0.1
+
+# Vecteurs statiques (lissage après chargement — Story 2.4.3.1)
+# lissage_alpha : 1 = aucune réduction, 0.7 ≈ −30 % de disparité (écart-type entre microzones)
+vecteurs_statiques:
+  lissage_alpha: 1
+
+# Matrices de base (gravité, croisée, voisins) — génération jour à jour J→J+1
+# reduction_effet : 0.8 = 80 % réduction ; 0 = effet plein ; négatif = amplification (ex. -0.5 = +50 %)
+matrices_base:
+  reduction_effet: -1
+
+# Effets des patterns de modulation (4j, 7j, 60j) — SANS réaléatoirisation
+effets_patterns:
+  reduction_effet: -0.4
+
+# Microzones
+microzones:
+  nombre: 100
+  source: "IRIS"  # Options: IRIS, OSM, grille
+  aggregation_method: "auto"  # Méthode d'agrégation pour atteindre ~100 zones
+
+# Golden Hour
+golden_hour:
+  seuil_minutes: 60
+  facteur_congestion_base: 1.0
+  facteur_stress_base: 1.0
+
+# Machine Learning
+ml:
+  features_central: 18
+  features_voisins: 4
+  total_features: 90  # 1 central (18) + 4 voisins (4×18)
+  algorithmes_regression:
+    - "RandomForest"
+    - "Ridge"
+  algorithmes_classification:
+    - "LogReg"
+    - "XGBoost"
+  metrics:
+    regression: ["MAE", "RMSE", "R2"]
+    classification: ["Accuracy", "Precision", "Recall", "F1"]
+
+# Pré-calculs - Activation/désactivation des blocs
+precompute:
+  enabled:
+    distances: true
+    microzones: true
+    vectors_static: true
+    prix_m2: true
+    congestion_static: true
+  # Options pour chaque bloc
+  distances:
+    source_casernes: "internet"  # Fichier trouvé sur internet
+    source_hopitaux: "internet"  # Fichier trouvé sur internet
+    method: "geodesic"  # Options: geodesic, network
+  microzones:
+    source: "IRIS"  # Options: IRIS, OSM, grille
+    output_format: "pickle"  # Options: pickle, geojson
+  vectors_static:
+    patterns_dir: "data/patterns"
+    default_if_missing: true
+  prix_m2:
+    source: "internet_or_generated"  # Internet ou génération
+    fallback_generation: true
+  congestion_static:
+    include_seasonality: true
+    base_factors: true
+
+# Realéatoirisation (Story 2.4.3.4) : réduction aléatoire de l'effet des matrices par arrondissement
+# Matrices J→J+1 (gravité, croisée, voisins) : modulation par reduction_base_matrices
+# Clé sans accent pour compatibilité encodage
+realaléatoirisation:
+  enabled: true
+  # reduction_base_matrices : 0.8 = 80 % réduction (20 % conservé) ; 0 = effet plein ; négatif = amplification
+  reduction_base_matrices: 0.1    # 0 = effet plein des matrices J→J+1 ; -0.3 = +30 % d'effet
+  periode_moyenne_jours: [7, 12]    # Moyenne jours entre deux déclenchements par arrondissement
+  duree_pattern_jours: [15, 20]     # Durée totale d'un pattern (rampes début + milieu + fin)
+  duree_rampe_jours: [2, 4]         # Durée de chaque rampe (début, milieu, fin) en jours
+  taux_reduction_min: 0.60          # Réduction min quand pattern actif (60 %) — plus bas = moins d'atténuation
+  taux_reduction_max: 0.85          # Réduction max quand pattern actif (85 %)
+  max_patterns_simultanes_par_arrondissement: 4   # Au plus 4 patterns actifs par arrondissement

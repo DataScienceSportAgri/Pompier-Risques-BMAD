@@ -30,9 +30,9 @@ Ce document indexe tous les shards d'architecture (BMAD v4) pour navigation rapi
 
 **Fichier:** `docs/architecture/dataflow.md`
 
-**Contenu:** Flux de données complets du système (simulation jour-à-jour, multi-runs, ML, erreurs, UI)
+**Contenu:** Flux de données complets du système (simulation jour-à-jour, multi-runs, ML, erreurs, UI). **Paramètres de run et trace (scénario, variabilité)** : voir dataflow.md § 1.1.
 
-**Quand consulter:** Pour comprendre les flux de données, intégration entre composants.
+**Quand consulter:** Pour comprendre les flux de données, intégration entre composants, propagation scénario/variabilité.
 
 ---
 
@@ -93,6 +93,16 @@ Ce document indexe tous les shards d'architecture (BMAD v4) pour navigation rapi
 **Contenu:** Review critique de l'architecture (points forts, faibles, risques, recommandations)
 
 **Quand consulter:** Pour comprendre les points d'attention, risques identifiés.
+
+---
+
+### 9. Orchestration — Paramètres de run (Architect)
+
+**Fichier:** `docs/architecture/orchestration-parametres-run-architect.md`
+
+**Contenu:** Fichier d'orchestration projet pour l'implémentation des arguments Scénario et Variabilité locale : périmètre, flux implémenté, trace, actions à documenter dans dataflow/index.
+
+**Quand consulter:** Pour mettre à jour la doc d'architecture (dataflow, trace) suite à l'ajout des paramètres scénario/variabilité dans les runs.
 
 ---
 

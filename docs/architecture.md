@@ -38,6 +38,7 @@ Ce document implémente les décisions techniques validées dans `docs/technical
 - `docs/architecture/config-validation.md` : Validation config au démarrage
 - `docs/architecture/benchmarks.md` : Benchmarks et performance
 - `docs/architecture/review.md` : Review critique (historique)
+- `docs/architecture/impact-decoupage-1.4.4.md` : Analyse impact découpage Story 1.4.4 (matrices, variables d'état, patterns)
 
 ---
 
@@ -65,14 +66,23 @@ Le système adopte une **Architecture Hexagonale (Ports & Adapters)** avec une o
 **Architecture des services:** Application monolithique modulaire (pas de microservices pour MVP).
 
 **Flux principal:**
-1. **Pré-calculs (Epic 1):** Scripts génèrent données fixes (microzones, distances, vecteurs statiques, prix m²) → pickles dans `data/source_data/`
+1. **Pré-calculs (Epic 1):** Scripts génèrent données fixes (microzones, distances, vecteurs statiques, prix m², **matrices de corrélation** - Story 1.4.4.1) → pickles dans `data/source_data/`
 2. **Simulation (Epic 2):** 
-   - Chargement données pré-calculées
-   - Boucle jour-à-jour: génération vecteurs → Golden Hour → morts/blessés → features → labels
+   - Chargement données pré-calculées (incluant matrices)
+   - Boucle jour-à-jour: **évolution variables d'état** → génération vecteurs (avec matrices + patterns) → Golden Hour → morts/blessés → features → labels
    - Sauvegarde état par run dans `data/intermediate/run_XXX/`
    - 50 runs: 1 affiché (UI Streamlit), 49 silencieux (parallélisés)
 3. **ML:** Après 50 runs, agrégation features/labels → entraînement modèles → sauvegarde dans `data/models/`
 4. **Prédiction:** Chargement modèle → simulation 1 run → prédictions semaine 5+
+
+**⚠️ NOUVEAU (Story 1.4.4):** Le flux J→J+1 inclut maintenant :
+- **Évolution variables d'état** (trafic, incidents nuit, incidents alcool) - Story 1.4.4.2
+- **Application matrices fixes** (intra-type, inter-type, voisin, saisonnalité) - Story 1.4.4.3
+- **Intégration variables d'état** dans calcul probabilités - Story 1.4.4.4
+- **Détection patterns** (4j→7j, 60j) - Story 1.4.4.5
+- **Application patterns** dans calcul probabilités - Story 1.4.4.6
+
+**Voir `docs/architecture/impact-decoupage-1.4.4.md` pour flux détaillé.**
 
 **Décisions architecturales clés:**
 - **Hexagonale:** Isolation cœur métier pour extensibilité (plugins, remplacement données)
@@ -162,10 +172,12 @@ graph TB
 
 **Modules:**
 - `src/core/generation/` : Génération vecteurs J+1 (Zero-Inflated Poisson, régimes cachés)
+- `src/core/evolution/` : Évolution variables d'état dynamiques (trafic, incidents nuit, incidents alcool) - Story 1.4.4.2
+- `src/core/probability/` : Calcul probabilités avec matrices fixes et variables d'état - Stories 1.4.4.3 + 1.4.4.4
 - `src/core/golden_hour/` : Calcul Golden Hour (trajets, congestion, stress)
 - `src/core/events/` : Événements graves et positifs (hierarchy + factory)
-- `src/core/patterns/` : Patterns temporels (4j, 7j, 60j)
-- `src/core/state/` : SimulationState (état global)
+- `src/core/patterns/` : Patterns temporels (4j, 7j, 60j) - Détection et gestion Stories 1.4.4.5 + 1.4.4.6
+- `src/core/state/` : SimulationState (état global) + DynamicState (variables d'état)
 
 **Principes:**
 - ✅ Aucune dépendance externe (pas de Streamlit, pickle, fichiers)
@@ -179,6 +191,13 @@ src/core/
 │   ├── vector_generator.py      # Génération vecteurs J+1
 │   ├── regime_manager.py         # Gestion régimes cachés
 │   └── intensity_calculator.py  # Intensités calibrées
+├── evolution/                    # NOUVEAU (Story 1.4.4.2)
+│   ├── trafic_evolution.py      # Évolution trafic J→J+1
+│   ├── nuit_evolution.py         # Évolution incidents nuit J→J+1
+│   └── alcool_evolution.py       # Évolution incidents alcool J→J+1
+├── probability/                  # NOUVEAU (Stories 1.4.4.3 + 1.4.4.4)
+│   ├── matrix_applicator.py     # Application matrices fixes
+│   └── probability_calculator.py # Calcul probabilités finales
 ├── golden_hour/
 │   ├── golden_hour.py           # Calcul temps trajets
 │   └── congestion.py            # Calcul congestion
@@ -192,13 +211,16 @@ src/core/
 │   ├── fin_travaux.py           # FinTravaux
 │   ├── nouvelle_caserne.py     # NouvelleCaserne
 │   └── event_factory.py         # Factory création événements
-├── patterns/
+├── patterns/                     # MODIFIÉ (Stories 1.4.4.5 + 1.4.4.6)
+│   ├── pattern_detector.py      # NOUVEAU : Détection patterns 4j→7j, 60j
+│   ├── pattern_manager.py        # MODIFIÉ : Gestion cycle de vie, limitation 3 max
 │   ├── pattern_loader.py        # Interface chargement patterns
 │   ├── pattern_4j.py            # Pattern court-terme 4j
 │   ├── pattern_7j.py            # Pattern court-terme 7j
 │   └── pattern_60j.py           # Pattern long-terme 60j
 └── state/
-    └── simulation_state.py      # SimulationState (état global)
+    ├── simulation_state.py      # SimulationState (état global)
+    └── dynamic_state.py         # NOUVEAU : Variables d'état (trafic, nuit, alcool)
 ```
 
 ---
@@ -376,6 +398,7 @@ from .vectors_state import VectorsState
 from .events_state import EventsState
 from .casualties_state import CasualtiesState
 from .regime_state import RegimeState
+from .dynamic_state import DynamicState  # NOUVEAU (Story 1.4.4.2)
 
 class SimulationState:
     """État global de la simulation (Aggregate Root)."""
@@ -390,6 +413,7 @@ class SimulationState:
         self.events_state = EventsState()            # Événements journaliers
         self.casualties_state = CasualtiesState()     # Casualties (agrégés par semaine)
         self.regime_state = RegimeState()            # Régimes par microzone
+        self.dynamic_state = DynamicState()          # NOUVEAU : Variables d'état dynamiques
 ```
 
 **Domaines composants:**
@@ -397,14 +421,28 @@ class SimulationState:
 - **EventsState:** Gestion événements graves et positifs
 - **CasualtiesState:** Gestion morts et blessés graves (agrégés par semaine)
 - **RegimeState:** Gestion régimes cachés (Stable/Détérioration/Crise)
+- **DynamicState:** Gestion variables d'état dynamiques (trafic, incidents nuit, incidents alcool) - Story 1.4.4.2
 
-**Voir `docs/architecture/simulation-state.md` pour détails complets (structure, méthodes, séparation features/labels).**
+**DynamicState structure (Story 1.4.4.2):**
+- **Trafic:** Niveau de congestion par microzone (0-1)
+- **Incidents nuit:** Nombre d'incidents par type se produisant la nuit
+- **Incidents alcool:** Nombre d'incidents par type causés par l'alcool
+
+**Voir `docs/architecture/simulation-state.md` pour détails complets (structure, méthodes, séparation features/labels).**  
+**Voir `docs/architecture/impact-decoupage-1.4.4.md` pour détails sur DynamicState et intégration matrices.**
 
 ---
 
 ### Vector Generator (Zero-Inflated Poisson)
 
-**Responsabilité:** Génération vecteurs journaliers selon modèle Zero-Inflated Poisson avec régimes cachés.
+**Responsabilité:** Génération vecteurs journaliers selon modèle Zero-Inflated Poisson avec régimes cachés, matrices de corrélation, variables d'état dynamiques et patterns.
+
+**⚠️ IMPORTANT:** Suite au découpage Story 1.4.4, le `VectorGenerator` intègre maintenant :
+- **Matrices fixes** (pré-calculées, Story 1.4.4.1) : intra-type, inter-type, voisin, saisonnalité, trafic, alcool/nuit
+- **Variables d'état dynamiques** (Story 1.4.4.2) : trafic, incidents nuit, incidents alcool (évoluent J→J+1)
+- **Patterns dynamiques** (Stories 1.4.4.5 + 1.4.4.6) : détection et application patterns 7j/60j
+
+**Voir `docs/architecture/impact-decoupage-1.4.4.md` pour détails complets sur l'intégration.**
 
 **Interface:**
 ```python
@@ -431,39 +469,68 @@ class VectorGenerator(ABC):
         pass
 
 class ZeroInflatedPoissonGenerator(VectorGenerator):
-    """Implémentation Zero-Inflated Poisson avec régimes cachés."""
+    """Implémentation Zero-Inflated Poisson avec régimes cachés, matrices et variables d'état."""
     
     def __init__(
         self,
         regime_manager: RegimeManager,
         pattern_manager: PatternManager,
-        static_vectors: Dict[str, Dict[str, Tuple[int, int, int]]]
+        static_vectors: Dict[str, Dict[str, Tuple[int, int, int]]],
+        # NOUVEAU (Story 1.4.4)
+        matrix_applicator: MatrixApplicator,  # Story 1.4.4.3
+        probability_calculator: ProbabilityCalculator,  # Stories 1.4.4.3 + 1.4.4.4
+        evolution_service: EvolutionService  # Story 1.4.4.2
     ):
         self.regime_manager = regime_manager
         self.pattern_manager = pattern_manager
         self.static_vectors = static_vectors
+        self.matrix_applicator = matrix_applicator
+        self.probability_calculator = probability_calculator
+        self.evolution_service = evolution_service
     
     def generate(self, day: int, state: SimulationState) -> Dict[str, Dict[str, Tuple[int, int, int]]]:
-        # 1. Déterminer régimes par microzone
+        # 1. ÉVOLUTION VARIABLES D'ÉTAT (Story 1.4.4.2)
+        # Note: L'évolution est gérée par SimulationService avant l'appel à generate()
+        # pour respecter l'ordre des opérations J→J+1
+        
+        # 2. CALCUL PROBABILITÉS (Stories 1.4.4.3 + 1.4.4.4)
+        # Application matrices fixes + intégration variables d'état
+        probabilities = self.probability_calculator.calculate(
+            day, state, state.dynamic_state
+        )
+        
+        # 3. DÉTECTION PATTERNS (Story 1.4.4.5)
+        patterns = self.pattern_manager.detect_patterns(day, state)
+        
+        # 4. APPLICATION PATTERNS (Story 1.4.4.6)
+        probabilities = self.probability_calculator.apply_patterns(
+            probabilities, patterns, day
+        )
+        
+        # 5. DÉTERMINER RÉGIMES PAR MICROZONE
         regimes = self.regime_manager.get_regimes(day, state)
         
-        # 2. Calculer intensités calibrées
-        intensities = self._calculate_intensities(day, state, regimes)
-        
-        # 3. Générer vecteurs (Zero-Inflated Poisson)
+        # 6. GÉNÉRER VECTEURS (Zero-Inflated Poisson)
         vectors = {}
         for microzone_id in state.config['microzones']:
             vectors[microzone_id] = {}
             for incident_type in ['agressions', 'incendies', 'accidents']:
-                # Génération selon modèle ZIP
+                # Génération selon modèle ZIP avec probabilités modulées
                 vector = self._generate_zip_vector(
-                    intensities[microzone_id][incident_type],
+                    probabilities[microzone_id][incident_type],
                     regimes[microzone_id]
                 )
                 vectors[microzone_id][incident_type] = vector
         
         return vectors
 ```
+
+**Flux J→J+1 complet :**
+1. **Évolution variables d'état** (trafic, incidents nuit, incidents alcool) - Story 1.4.4.2
+2. **Calcul probabilités** (matrices fixes + variables d'état) - Stories 1.4.4.3 + 1.4.4.4
+3. **Détection patterns** (4j→7j, 60j) - Story 1.4.4.5
+4. **Application patterns** (modulation probabilités) - Story 1.4.4.6
+5. **Génération vecteurs** (Zero-Inflated Poisson avec probabilités finales)
 
 ---
 
@@ -1305,6 +1372,7 @@ python main.py --headless --runs 50
   - `docs/architecture/config-validation.md` : Validation config au démarrage
   - `docs/architecture/benchmarks.md` : Benchmarks et performance
   - `docs/architecture/review.md` : Review critique (historique)
+  - `docs/architecture/impact-decoupage-1.4.4.md` : Analyse impact découpage Story 1.4.4 (matrices, variables d'état, patterns)
 
 ---
 

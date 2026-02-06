@@ -99,6 +99,22 @@ sequenceDiagram
 
 ---
 
+### 1.1 Paramètres de run : Scénario et Variabilité locale
+
+Les deux arguments **Scénario** (Pessimiste / Standard / Optimiste) et **Variabilité locale** (Faible / Moyenne / Forte) sont pris en compte à chaque run (headless et UI) et enregistrés dans `trace.json`.
+
+**Entrées :**
+- **UI Streamlit :** `st.selectbox("Scénario", …)` et `st.selectbox("Variabilité", …)` → valeurs transmises au clic LANCEMENT à `SimulationService.run_one(…, scenario_ui=…, variabilite_ui=…)`.
+- **CLI headless :** `main.py --scenario Pessimiste|Standard|Optimiste --variabilite Faible|Moyenne|Forte` → transmis à `SimulationService.run_headless(…, scenario_ui=…, variabilite_ui=…)`.
+
+**Résolution des paramètres :** `SimulationService._resolve_run_params(config, scenario_ui, variabilite_ui)` produit `(scenario_config, variabilite_locale, scenario_key, variabilite_label)` avec `scenario_config = {"facteur_intensite": float, "proba_crise": float}` lu depuis `config.scenarios.<scenario_key>` et variabilité UI → 0.3 / 0.5 / 0.7.
+
+**Propagation :** `SimulationService` crée `GenerationService(…, scenario_config=…, variabilite_locale=…)` pour chaque run. `GenerationService` construit `MatrixModulator(…, variabilite_locale=…)` et dans `generate_day` appelle `VectorGenerator.generate_vectors_for_day(…, variabilite_locale=…, facteur_intensite=scenario_config["facteur_intensite"])`. Le **VectorGenerator** applique `intensity *= facteur_intensite` après le calcul d’intensité ; le **MatrixModulator** utilise `variabilite_locale` pour la modulation voisins / matrices.
+
+**Sortie trace :** `data/intermediate/run_XXX/trace.json` contient `scenario`, `variabilite`, `variabilite_locale`, `seed` (voir `docs/naming-conventions.md` § Trace).
+
+---
+
 ## 2. Flux Multi-Runs (50 Runs)
 
 ### Diagramme de Processus

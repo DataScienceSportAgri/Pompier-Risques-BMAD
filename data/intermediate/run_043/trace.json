@@ -1,0 +1,10 @@
+{
+  "run_id": "run_043",
+  "days": 392,
+  "completed": true,
+  "final_day": 392,
+  "scenario": "moyen",
+  "variabilite": "Faible",
+  "variabilite_locale": 0.3,
+  "seed": 85
+}
